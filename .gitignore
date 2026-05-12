@@ -6,3 +6,8 @@ out/
 !.env.example
 playwright-report/
 test-results/
+
+# Gas City
+.beads/*
+!.beads/config.yaml
+!.beads/metadata.json

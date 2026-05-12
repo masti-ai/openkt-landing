@@ -1,0 +1,14 @@
+# OpenKT CLI install script — proxied to the openkt-cli-prod S3 bucket so
+# that the install.sh shipped from the openkt-cli repo (single source of
+# truth, regenerated on every release) is what users get when they curl
+# the canonical openkt.ai URL.
+#
+# 302 (temporary) is intentional — keeps caches short so a rotated
+# install.sh (e.g. bucket rename) takes effect within minutes, not the
+# 1-year TTL a permanent redirect would imply.
+#
+# curl -L follows redirects transparently, so:
+#   curl -fsSL https://openkt.ai/install.sh | bash
+# routes to S3 without the user noticing.
+
+/install.sh  https://openkt-cli-prod.s3.us-east-1.amazonaws.com/cli/install.sh  302
