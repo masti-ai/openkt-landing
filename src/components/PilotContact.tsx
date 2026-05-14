@@ -73,10 +73,10 @@ export default function PilotContact() {
           className="text-xl text-warm-900"
           style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
         >
-          You're on the list.
+          You&apos;re on the list.
         </p>
         <p className="mt-2 text-[13.5px] text-warm-700 leading-relaxed">
-          We'll be in touch within one business day. If we're a fit, we'll book
+          We&apos;ll be in touch within one business day. If we&apos;re a fit, we&apos;ll book
           a 30-minute call and walk you through the pilot setup the same week.
         </p>
       </div>

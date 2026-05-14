@@ -31,15 +31,22 @@ export default function Reveal({
   style,
 }: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const [shown, setShown] = useState(false);
+  // SSR-safe initial: on environments without IntersectionObserver
+  // (build-time, certain headless test runners) we render fully-shown
+  // immediately instead of fading-in to nothing. Resolving this in the
+  // initial-state lazy initializer satisfies react-hooks/set-state-in-effect
+  // — calling setShown inside useEffect's bail branch was the older form.
+  const [shown, setShown] = useState(
+    () => typeof IntersectionObserver === "undefined",
+  );
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
 
-    // SSR-safe; bail to "shown" on environments without IO.
+    // If IO isn't available we already initialised shown=true above —
+    // nothing to wire up.
     if (typeof IntersectionObserver === "undefined") {
-      setShown(true);
       return;
     }
 

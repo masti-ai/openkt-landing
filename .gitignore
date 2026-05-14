@@ -11,3 +11,10 @@ test-results/
 .beads/*
 !.beads/config.yaml
 !.beads/metadata.json
+
+# Per-agent tooling scratch dirs — never check these in. AI coding
+# assistants stash per-session state here and it collides badly across
+# agents / machines if it ever lands in git.
+.claude/
+.opencode/
+.openkt/

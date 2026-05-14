@@ -212,7 +212,7 @@ function Hero() {
             className="mt-3 text-4xl sm:text-6xl font-medium tracking-tight text-warm-900 max-w-4xl leading-[1.05]"
             style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
           >
-            Your team's AI shouldn't
+            Your team&apos;s AI shouldn&apos;t
             <br />
             <span className="text-warm-500">start from zero.</span>
             <span
@@ -223,8 +223,8 @@ function Hero() {
         </Reveal>
         <Reveal i={4}>
           <p className="mt-6 max-w-xl text-base sm:text-lg leading-relaxed text-warm-600">
-            One shared brain for every coding agent on your team. They inherit yesterday's
-            decisions, share today's discoveries, and skip the 47k-token repo scan every
+            One shared brain for every coding agent on your team. They inherit yesterday&apos;s
+            decisions, share today&apos;s discoveries, and skip the 47k-token repo scan every
             morning.
           </p>
         </Reveal>
@@ -384,7 +384,7 @@ function Problem() {
                   <span className="font-mono text-accent shrink-0">▸</span>
                   <span>
                     A new chat opens. The agent re-scans 40 files to find a fix
-                    your teammate's agent shipped yesterday.
+                    your teammate&apos;s agent shipped yesterday.
                   </span>
                 </li>
                 <li className="flex items-baseline gap-3 text-[14.5px] text-warm-800">
@@ -794,7 +794,7 @@ function HowItWorks() {
             </Reveal>
             <Reveal i={2}>
               <p className="text-warm-700 text-[15px] leading-relaxed">
-                One agent's discovery becomes an org-wide capability. Every transition leaves a receipt. Every receipt seeds the next observation.
+                One agent&apos;s discovery becomes an org-wide capability. Every transition leaves a receipt. Every receipt seeds the next observation.
               </p>
             </Reveal>
           </div>
@@ -913,7 +913,7 @@ function SampleRun() {
         </Reveal>
         <Reveal i={2}>
           <p className="mt-3 text-warm-300 leading-relaxed max-w-2xl">
-            Same prompt, two agents. The naïve one re-explores from zero; the Open KT agent inherits the team's last session. Watch the cost.
+            Same prompt, two agents. The naïve one re-explores from zero; the Open KT agent inherits the team&apos;s last session. Watch the cost.
           </p>
         </Reveal>
 
@@ -975,7 +975,7 @@ function SampleRun() {
               </div>
             </div>
             <p className="mt-4 text-[13.5px] text-warm-300 leading-relaxed">
-              Same prompt, two agents. The naïve one rebuilds context from scratch. The Open KT one inherits yesterday's answer and gets to work.
+              Same prompt, two agents. The naïve one rebuilds context from scratch. The Open KT one inherits yesterday&apos;s answer and gets to work.
             </p>
           </div>
         </Reveal>
@@ -1144,7 +1144,7 @@ function Pilot() {
         </Reveal>
         <Reveal i={2}>
           <p className="mt-3 text-warm-600 max-w-xl">
-            We're picking 5–10 design partners — teams who feel the cost of starting from zero and ship fast. Same-week response.
+            We&apos;re picking 5–10 design partners — teams who feel the cost of starting from zero and ship fast. Same-week response.
           </p>
         </Reveal>
 
@@ -1152,7 +1152,7 @@ function Pilot() {
           <Reveal direction="left" i={3} className="lg:col-span-2">
             <div className="space-y-1">
               <div className="mb-6 text-[10px] uppercase tracking-[0.22em] font-mono text-warm-500">
-                What's included
+                What&apos;s included
               </div>
               <ul className="space-y-5">
                 {PILOT_BENEFITS.map((b) => (
