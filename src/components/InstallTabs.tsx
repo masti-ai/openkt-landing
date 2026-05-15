@@ -12,7 +12,7 @@ type Harness = {
   icon: React.ReactNode;
 };
 
-const CURSOR_CONFIG = { url: "https://api.openkt.ai/v1/mcp", type: "http" };
+const CURSOR_CONFIG = { url: "https://api.openkt.ai/mcp", type: "http" };
 const CURSOR_DEEPLINK = `cursor://anysphere.cursor-deeplink/mcp/install?name=openkt&config=${
   typeof window === "undefined"
     ? Buffer.from(JSON.stringify(CURSOR_CONFIG)).toString("base64")
@@ -172,7 +172,7 @@ export default function InstallTabs() {
       case "claude-code":
         return (
           <>
-            <CopyableCommand command="claude mcp add --transport http openkt https://api.openkt.ai/v1/mcp -s user" />
+            <CopyableCommand command="claude mcp add --transport http openkt https://api.openkt.ai/mcp -s user" />
             <p className="mt-3 text-[13px] text-warm-600 leading-relaxed">
               One command. Verifies connection, stores at user scope so every project picks it up.
             </p>
@@ -181,7 +181,7 @@ export default function InstallTabs() {
       case "claude-desktop":
         return (
           <>
-            <CopyableCommand command="https://api.openkt.ai/v1/mcp" noPrefix />
+            <CopyableCommand command="https://api.openkt.ai/mcp" noPrefix />
             <p className="mt-3 text-[13px] text-warm-600 leading-relaxed">
               Settings → <span className="text-warm-800">Connectors</span> → <span className="text-warm-800">Add Custom Connector</span>. Paste the URL above.
             </p>
@@ -190,7 +190,7 @@ export default function InstallTabs() {
       case "codex":
         return (
           <>
-            <CopyableCommand command="codex mcp add openkt --transport http --url https://api.openkt.ai/v1/mcp" />
+            <CopyableCommand command="codex mcp add openkt --transport http --url https://api.openkt.ai/mcp" />
             <p className="mt-3 text-[13px] text-warm-600 leading-relaxed">
               Codex ≥ 0.24 speaks MCP natively. Same server, same tools — no re-wiring.
             </p>
@@ -214,7 +214,7 @@ export default function InstallTabs() {
       case "custom":
         return (
           <>
-            <CopyableCommand command="https://api.openkt.ai/v1/mcp" noPrefix />
+            <CopyableCommand command="https://api.openkt.ai/mcp" noPrefix />
             <p className="mt-3 text-[13px] text-warm-600 leading-relaxed">
               Drop this URL into whatever MCP configuration your harness uses — OpenCode, Auggie, Hermit, anything that speaks MCP over HTTP.
             </p>
