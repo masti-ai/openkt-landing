@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import CopyableCommand from "@/components/CopyableCommand";
 import InstallTabs from "@/components/InstallTabs";
 import PilotContact from "@/components/PilotContact";
 import Reveal from "@/components/Reveal";
@@ -1082,13 +1083,57 @@ function HarnessStrip() {
         <Reveal i={2}>
           <div id="install" className="mt-12">
             <div className="mb-6">
-              <Kicker>Install · MCP over HTTP</Kicker>
+              <Kicker>Install · One shot</Kicker>
               <h2
                 className="mt-2 text-2xl sm:text-3xl tracking-tight text-warm-900 max-w-2xl"
                 style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
               >
-                One line per harness. Same shared brain.
+                One command. Every harness wired.
               </h2>
+              <p className="mt-3 text-[14px] text-warm-600 max-w-2xl leading-relaxed">
+                Installs the <code className="text-[13px] bg-warm-100 px-1.5 py-0.5 rounded text-warm-800">kt</code> CLI, registers the MCP server in every harness you have installed (Claude Code, Cursor, Codex, OpenCode), wires the session-start + recall hooks, and patches your shell rc — all in one go. <code className="text-[13px] bg-warm-100 px-1.5 py-0.5 rounded text-warm-800">kt login</code> finishes the auth.
+              </p>
+            </div>
+            <CopyableCommand command="curl -sSL https://openkt.ai/install.sh | bash" />
+            <p className="mt-3 text-[13px] text-warm-600 leading-relaxed">
+              Then: <code className="text-[13px] bg-warm-100 px-1.5 py-0.5 rounded text-warm-800">kt login</code> · binds your project with <code className="text-[13px] bg-warm-100 px-1.5 py-0.5 rounded text-warm-800">kt init</code>.
+              Self-updates via <code className="text-[13px] bg-warm-100 px-1.5 py-0.5 rounded text-warm-800">kt update</code>; binaries sha256-verified.
+            </p>
+
+            <div className="mt-8 rounded-lg border border-warm-200 bg-warm-100/40 p-5 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-6">
+                <div className="max-w-xl">
+                  <p className="text-[11px] uppercase tracking-[0.2em] font-mono text-warm-500">
+                    Don&apos;t want to do it yourself?
+                  </p>
+                  <p className="mt-2 text-[14px] text-warm-700 leading-relaxed">
+                    Hand the setup to your agent. The skill file tells any AI agent — Claude, Cursor, Codex, ChatGPT — exactly how to install and wire OpenKT into your repo. Paste the URL below into your agent and say <span className="italic text-warm-800">&ldquo;follow this skill&rdquo;</span>.
+                  </p>
+                </div>
+                <a
+                  href="https://openkt.ai/skill"
+                  className="inline-flex shrink-0 items-center justify-center gap-2 h-10 px-4 rounded-md border border-warm-300 bg-white text-warm-800 text-sm font-medium hover:border-warm-500 hover:text-warm-900 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                >
+                  Open the skill
+                  <span aria-hidden>→</span>
+                </a>
+              </div>
+              <div className="mt-4">
+                <CopyableCommand command="https://openkt.ai/skill" noPrefix />
+              </div>
+            </div>
+
+            <div className="mt-12 mb-6">
+              <Kicker>Or skip the CLI · MCP over HTTP</Kicker>
+              <h3
+                className="mt-2 text-xl sm:text-2xl tracking-tight text-warm-900 max-w-2xl"
+                style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+              >
+                Connect a single harness directly.
+              </h3>
+              <p className="mt-2 text-[13px] text-warm-600 max-w-2xl leading-relaxed">
+                Skip the CLI install and just point your harness at OpenKT&apos;s MCP server. You get the same tools (recall, save, search), but you forgo the auto-recall + session-start hooks that <code className="text-[13px] bg-warm-100 px-1 py-0.5 rounded text-warm-800">kt login</code> wires up.
+              </p>
             </div>
             <InstallTabs />
           </div>
