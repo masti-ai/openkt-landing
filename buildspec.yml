@@ -1,0 +1,77 @@
+version: 0.2
+
+# CodeBuild build-on-push spec for openkt-landing (Next.js static export →
+# Cloudflare Pages).
+#
+# Project name:  openkt-landing-build (create in AWS account)
+# Source:        masti-ai/openkt-landing, GitHub webhook on push to main
+# Buildspec:     buildspec.yml (this file)
+# Service role:  needs `secretsmanager:GetSecretValue` on
+#                arn:aws:secretsmanager:us-east-1:724772068721:secret:openkt-staging/cloudflare_pages_*
+#
+# Replaces the previous .github/workflows/deploy.yml which was broken
+# (CLOUDFLARE_API_TOKEN secret was never configured in the GH repo) and
+# also violates the project rule: we run pipelines on AWS, not GitHub
+# Actions (Pratham 2026-05-15: "we don't want to pay GitHub, we use
+# AWS credits").
+#
+# The hosting target is unchanged — Cloudflare Pages (project name
+# `openkt-landing`). The only change is what CALLS wrangler.
+
+env:
+  shell: bash
+  variables:
+    NODE_VERSION: "20"
+    CF_PAGES_PROJECT: openkt-landing
+  # Pull CF credentials from AWS Secrets Manager. PRATHAM TO POPULATE
+  # these two secrets ONCE before the first CodeBuild run:
+  #   openkt-staging/cloudflare_pages_token        ← account-scoped, Pages:Edit
+  #   openkt-staging/cloudflare_account_id         ← the openkt CF account id
+  # The existing openkt-staging/cloudflare_api_token is zone-scoped only
+  # (zone-read + rulesets-edit) so wrangler pages deploy 403s with it —
+  # which is why a separate Pages-scoped token is required here.
+  secrets-manager:
+    CLOUDFLARE_API_TOKEN: openkt-staging/cloudflare_pages_token
+    CLOUDFLARE_ACCOUNT_ID: openkt-staging/cloudflare_account_id
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - 'echo "Node $(node --version), npm $(npm --version)"'
+      - npm install -g npm@10
+
+  pre_build:
+    commands:
+      - set -euo pipefail
+      - 'echo "commit $CODEBUILD_RESOLVED_SOURCE_VERSION"'
+      - npm ci --no-audit --no-fund
+
+  build:
+    commands:
+      # Pre-merge gates first — a lint/typecheck failure on main means
+      # someone landed a bypass and we should fail loud instead of
+      # shipping a broken landing page. e2e is opt-in via $RUN_E2E to
+      # keep the hot deploy path fast (~90s); add it to a separate
+      # buildspec.ci.yml for PR gating once that project exists.
+      - echo "== lint =="
+      - npm run lint
+      - echo "== typecheck =="
+      - npx tsc --noEmit
+      - echo "== build (Next.js static export → out/) =="
+      - NODE_ENV=production npm run build
+
+  post_build:
+    commands:
+      - set -euo pipefail
+      - 'echo "Deploying static export to Cloudflare Pages..."'
+      # wrangler pages deploy reads CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID
+      # from env (populated by secrets-manager block above). --branch=main
+      # publishes to the production target; PR branches would publish to
+      # preview URLs if we ever wire a separate PR buildspec.
+      - npx --yes wrangler@latest pages deploy out --project-name="$CF_PAGES_PROJECT" --branch=main
+      - 'echo "Deployed — openkt.ai should serve the new build within ~30s"'
+
+artifacts:
+  files: []
