@@ -21,7 +21,7 @@ version: 0.2
 env:
   shell: bash
   variables:
-    NODE_VERSION: "20"
+    NODE_VERSION: "22"
     CF_PAGES_PROJECT: openkt-landing
   # Pull CF credentials from AWS Secrets Manager. PRATHAM TO POPULATE
   # these two secrets ONCE before the first CodeBuild run:
@@ -37,7 +37,7 @@ env:
 phases:
   install:
     runtime-versions:
-      nodejs: 20
+      nodejs: 22
     commands:
       - 'echo "Node $(node --version), npm $(npm --version)"'
       - npm install -g npm@10
