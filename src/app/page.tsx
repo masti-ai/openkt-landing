@@ -1,5 +1,62 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { getTweet } from "react-tweet/api";
+
+// Real tweet, rendered as an Open-Field card. We fetch the live tweet data and
+// render our own markup — react-tweet's <Tweet>/<EmbeddedTweet> throw
+// "entities is not iterable" on these syndication payloads (entities: {}), so
+// we bypass its renderer. Falls back to null on any fetch error.
+async function TweetEmbed({ id }: { id: string }) {
+  let t: Awaited<ReturnType<typeof getTweet>> | null = null;
+  try {
+    t = await getTweet(id);
+  } catch {
+    t = null;
+  }
+  if (!t || !t.user) return null;
+  const u = t.user;
+  const fav = typeof t.favorite_count === "number" ? t.favorite_count : 0;
+  const date = new Date(t.created_at).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  return (
+    <a
+      href={`https://x.com/${u.screen_name}/status/${t.id_str}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex flex-col h-full bg-white rounded-lg border border-warm-200 p-5 hover-lift focus-ring"
+    >
+      <div className="flex items-center gap-3 mb-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={u.profile_image_url_https} alt="" width={40} height={40} className="w-10 h-10 rounded-full bg-warm-100" loading="lazy" />
+        <div className="min-w-0 leading-tight">
+          <div className="flex items-center gap-1 text-sm font-medium text-warm-900">
+            <span className="truncate">{u.name}</span>
+            {u.verified && (
+              <svg viewBox="0 0 24 24" width="15" height="15" className="text-accent shrink-0" fill="currentColor" aria-hidden>
+                <path d="M22.5 12l-2.3-2.6.3-3.5-3.4-.8L15.3 2 12 3.4 8.7 2 6.9 5.1l-3.4.8.3 3.5L1.5 12l2.3 2.6-.3 3.5 3.4.8L8.7 22 12 20.6 15.3 22l1.8-3.1 3.4-.8-.3-3.5L22.5 12zm-12.1 4.2L6 11.8l1.6-1.6 2.8 2.8 6-6L18 8.6l-7.6 7.6z" />
+              </svg>
+            )}
+          </div>
+          <div className="text-[12px] text-warm-500">@{u.screen_name}</div>
+        </div>
+        <div className="flex-1" />
+        <svg aria-hidden width="17" height="17" viewBox="0 0 24 24" className="text-warm-400 shrink-0" fill="currentColor">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+        </svg>
+      </div>
+      <p className="text-[14px] text-warm-800 leading-relaxed whitespace-pre-wrap">{t.text}</p>
+      <div className="mt-auto pt-3 flex items-center gap-2 text-[12px] text-warm-500">
+        <span className="text-accent">♥</span>
+        <span className="tabular-nums">{Intl.NumberFormat("en-US").format(fav)}</span>
+        <span className="text-warm-300">·</span>
+        <time>{date}</time>
+      </div>
+    </a>
+  );
+}
 import CopyableCommand from "@/components/CopyableCommand";
 import InstallTabs from "@/components/InstallTabs";
 import PilotContact from "@/components/PilotContact";
@@ -104,8 +161,8 @@ export default function LandingPage() {
       <Problem />
       <Compare />
       <Solution />
-      <HowItWorks />
       <SampleRun />
+      <SeeItWork />
       <HarnessStrip />
       <Pilot />
       <FAQ />
@@ -149,7 +206,7 @@ function TopNav() {
         <span className="flex items-baseline gap-2">
           <span
             className="text-[15px] tracking-tight text-warm-900"
-            style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+            style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
           >
             Open KT
           </span>
@@ -211,7 +268,7 @@ function Hero() {
         <Reveal i={3}>
           <h1
             className="mt-3 text-4xl sm:text-6xl font-medium tracking-tight text-warm-900 max-w-4xl leading-[1.05]"
-            style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+            style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
           >
             Your team&apos;s AI shouldn&apos;t
             <br />
@@ -284,70 +341,12 @@ function Maxim() {
 {MAXIM_ASCII}
           </pre>
         </Reveal>
-        <Reveal i={1}>
-          <p className="text-center text-[15px] sm:text-base text-warm-700 max-w-2xl mx-auto leading-relaxed">
-            Every team will swap Cursor for Claude Code for Codex three times this year.
-            What stays — what compounds — is what the team has{" "}
-            <span className="text-warm-900 font-medium">already learned</span>. That layer
-            is the product.
-          </p>
-        </Reveal>
       </div>
     </section>
   );
 }
 
-/* -------------------------------------------------------------------------
- * Tweet card — social proof, used inside the Problem section.
- * ------------------------------------------------------------------------- */
-
-function TweetCard({
-  handle,
-  name,
-  role,
-  url,
-  body,
-}: {
-  handle: string;
-  name: string;
-  role: string;
-  url: string;
-  body: string;
-}) {
-  return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block relative bg-white p-5 hover-lift focus-ring"
-    >
-      <BoxCorners />
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-8 h-8 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center text-[11px] font-medium text-accent uppercase">
-          {name.slice(0, 1)}
-        </div>
-        <div className="min-w-0">
-          <div className="text-sm font-medium text-warm-900 leading-tight">{name}</div>
-          <div className="text-[11px] text-warm-500 leading-tight">
-            {handle} · {role}
-          </div>
-        </div>
-        <div className="flex-1" />
-        <svg
-          aria-hidden
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          className="text-warm-400"
-          fill="currentColor"
-        >
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-        </svg>
-      </div>
-      <p className="text-[13px] text-warm-700 leading-relaxed">{body}</p>
-    </a>
-  );
-}
+/* Tweets are real embeds now (react-tweet) — see the Problem section. */
 
 /* -------------------------------------------------------------------------
  * Problem (PAS) — Stochastic Tax framing without the "amnesia" word.
@@ -357,15 +356,15 @@ function Problem() {
   return (
     <section id="problem" className="border-b border-warm-200 py-20 sm:py-24 bg-warm-100/40">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 items-center">
-          <div className="lg:col-span-3 space-y-6">
+        <div>
+          <div className="space-y-6 max-w-3xl">
             <Reveal>
               <Kicker>The cost of starting from zero</Kicker>
             </Reveal>
             <Reveal i={1}>
               <h2
                 className="text-3xl sm:text-4xl tracking-tight text-warm-900 max-w-3xl"
-                style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+                style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
               >
                 Your agents pay rent every morning,
                 <br />
@@ -412,34 +411,6 @@ function Problem() {
             </Reveal>
           </div>
 
-          <Reveal direction="right" i={2} className="lg:col-span-2">
-            <div className="relative bg-white p-7">
-              <BoxCorners />
-              <div className="text-[10px] uppercase tracking-[0.2em] text-warm-500 font-mono mb-5">
-                What every session costs you
-              </div>
-              <ul className="space-y-4">
-                {[
-                  ["~47k", "tokens", "spent re-exploring per session"],
-                  ["3×", "/ year", "harness migrations wipe your context"],
-                  ["80%", "lost", "of learnings die in chat windows"],
-                  ["0%", "by default", "of it compounds for the team"],
-                ].map(([v, unit, l]) => (
-                  <li key={l} className="flex items-baseline gap-4">
-                    <span className="flex items-baseline gap-1.5 w-24 shrink-0">
-                      <span className="font-mono tabular-nums text-warm-900 text-2xl font-medium">
-                        {v}
-                      </span>
-                      <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-warm-500">
-                        {unit}
-                      </span>
-                    </span>
-                    <span className="text-[13px] text-warm-700 leading-snug">{l}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </Reveal>
         </div>
 
         {/* Tweet pair — industry voices echoing the problem framing. */}
@@ -449,24 +420,12 @@ function Problem() {
               People who saw this coming
             </p>
           </Reveal>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="tweet-embeds grid grid-cols-1 md:grid-cols-2 gap-4" data-theme="light">
             <Reveal i={1} direction="left">
-              <TweetCard
-                handle="@garrytan"
-                name="Garry Tan"
-                role="CEO, Y Combinator"
-                url="https://x.com/garrytan/status/2043198780800197025"
-                body="Skills and memory are the real moat. The harness is a commodity — you'll switch yours three times this year. What survives is the knowledge and workflow your agents carry between runs."
-              />
+              <TweetEmbed id="2043198780800197025" />
             </Reveal>
             <Reveal i={2} direction="right">
-              <TweetCard
-                handle="@theo"
-                name="Theo"
-                role="t3.gg"
-                url="https://x.com/theo/status/2043819374889554261"
-                body="Thin harness, fat skills. Anyone still shipping a fat harness in 2026 is building on sand — the agents that win are the ones that share context, not the ones that re-learn it every session."
-              />
+              <TweetEmbed id="2043819374889554261" />
             </Reveal>
           </div>
         </div>
@@ -503,7 +462,7 @@ function Compare() {
         <Reveal i={1}>
           <h2
             className="mt-2 text-2xl sm:text-3xl tracking-tight text-warm-900 max-w-3xl"
-            style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+            style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
           >
             Same prompt. Different bill.
           </h2>
@@ -661,7 +620,7 @@ function Solution() {
         <Reveal i={1}>
           <h2
             className="mt-2 text-3xl sm:text-4xl tracking-tight text-warm-900 max-w-3xl"
-            style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+            style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
           >
             Three layers of compounding intelligence.
           </h2>
@@ -691,7 +650,7 @@ function Solution() {
                 </div>
                 <h3
                   className="text-lg font-medium text-warm-900 mb-3"
-                  style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+                  style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
                 >
                   {c.title}
                 </h3>
@@ -788,7 +747,7 @@ function HowItWorks() {
             <Reveal i={1}>
               <h2
                 className="text-3xl sm:text-4xl tracking-tight text-warm-900"
-                style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+                style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
               >
                 Observe → Promote → Inherit.
               </h2>
@@ -825,7 +784,7 @@ function HowItWorks() {
                     <div className="min-w-0 flex-1">
                       <h3
                         className="text-base font-medium mb-2"
-                        style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+                        style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
                       >
                         {s.title}
                       </h3>
@@ -907,7 +866,7 @@ function SampleRun() {
         <Reveal i={1}>
           <h2
             className="mt-2 text-3xl sm:text-4xl tracking-tight text-warm-50 max-w-3xl"
-            style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+            style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
           >
             One discovery. Free for every agent that follows.
           </h2>
@@ -1055,6 +1014,67 @@ function RunLine({ kind, text, index }: { kind: RunLineKind; text: string; index
  * Lives between the Sample Run and Pricing as a slim trust band.
  * ------------------------------------------------------------------------- */
 
+function SeeItWork() {
+  return (
+    <section id="see-it-work" className="border-b border-warm-200 py-20 sm:py-24">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <Reveal>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-accent font-mono">
+            Install · under a minute
+          </p>
+        </Reveal>
+        <Reveal i={1}>
+          <h2
+            className="mt-2 text-3xl sm:text-4xl tracking-tight text-warm-900 max-w-3xl"
+            style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
+          >
+            Wire it in. Watch it remember.
+          </h2>
+        </Reveal>
+        <Reveal i={2}>
+          <p className="mt-3 text-warm-600 leading-relaxed max-w-2xl">
+            One line wires OpenKT into your agent. From then on, every decision your team makes is one{" "}
+            <code className="font-mono text-[0.9em] text-warm-800">kt recall</code> away.
+          </p>
+        </Reveal>
+        <Reveal i={3}>
+          <figure className="mt-10 max-w-4xl">
+            <div className="rounded-lg overflow-hidden border border-warm-300 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.35)] bg-warm-900">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/install.gif"
+                alt="Installing OpenKT — wire the MCP server, then kt login, kt init, kt remember, kt recall"
+                className="w-full block"
+                loading="lazy"
+              />
+            </div>
+            <figcaption className="mt-3 text-[12px] text-warm-500 font-mono flex items-center gap-2">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent animate-pulse-soft" />
+              real terminal · the actual kt quick-start
+            </figcaption>
+          </figure>
+        </Reveal>
+        <Reveal i={4}>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <a
+              href="#install"
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-md bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors shadow-sm"
+            >
+              Install now <span aria-hidden>↓</span>
+            </a>
+            <a
+              href="#sample-run"
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-md border border-warm-300 text-warm-800 text-sm font-medium hover:border-warm-400 hover:bg-warm-100 transition-colors"
+            >
+              Watch a full sample run <span aria-hidden>→</span>
+            </a>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 function HarnessStrip() {
   const harnesses = [
     "Claude Code", "Claude Desktop", "Codex", "Cursor", "OpenCode",
@@ -1086,7 +1106,7 @@ function HarnessStrip() {
               <Kicker>Install · One shot</Kicker>
               <h2
                 className="mt-2 text-2xl sm:text-3xl tracking-tight text-warm-900 max-w-2xl"
-                style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+                style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
               >
                 One command. Every harness wired.
               </h2>
@@ -1100,26 +1120,36 @@ function HarnessStrip() {
               Self-updates via <code className="text-[13px] bg-warm-100 px-1.5 py-0.5 rounded text-warm-800">kt update</code>; binaries sha256-verified.
             </p>
 
-            <div className="mt-8 rounded-lg border border-warm-200 bg-warm-100/40 p-5 sm:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-6">
-                <div className="max-w-xl">
-                  <p className="text-[11px] uppercase tracking-[0.2em] font-mono text-warm-500">
-                    Don&apos;t want to do it yourself?
-                  </p>
-                  <p className="mt-2 text-[14px] text-warm-700 leading-relaxed">
-                    Hand the setup to your agent. The skill file tells any AI agent — Claude, Cursor, Codex, ChatGPT — exactly how to install and wire OpenKT into your repo. Paste the URL below into your agent and say <span className="italic text-warm-800">&ldquo;follow this skill&rdquo;</span>.
-                  </p>
-                </div>
-                <a
-                  href="https://openkt.ai/skill"
-                  className="inline-flex shrink-0 items-center justify-center gap-2 h-10 px-4 rounded-md border border-warm-300 bg-white text-warm-800 text-sm font-medium hover:border-warm-500 hover:text-warm-900 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            <div className="mt-8 relative overflow-hidden rounded-lg border border-accent/30 bg-accent/[0.05] p-6 sm:p-7">
+              <span aria-hidden className="pointer-events-none absolute -right-6 -top-8 text-[120px] leading-none font-mono text-accent/10 select-none">↳</span>
+              <div className="relative">
+                <p className="text-[11px] uppercase tracking-[0.2em] font-mono text-accent">
+                  The lazy way — and the best way
+                </p>
+                <h3
+                  className="mt-2 text-2xl sm:text-3xl tracking-tight text-warm-900"
+                  style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
                 >
-                  Open the skill
-                  <span aria-hidden>→</span>
-                </a>
-              </div>
-              <div className="mt-4">
-                <CopyableCommand command="https://openkt.ai/skill" noPrefix />
+                  Don&apos;t install it. Hand it to your agent.
+                </h3>
+                <p className="mt-3 text-[14.5px] text-warm-700 leading-relaxed max-w-2xl">
+                  Copy this one URL, paste it into Claude Code, Cursor, Codex — any agent — and say{" "}
+                  <span className="italic text-warm-900">&ldquo;follow this skill.&rdquo;</span>{" "}
+                  It reads the skill file and wires OpenKT into your repo — CLI, MCP server, session hooks, auth — start to finish, while you watch.
+                </p>
+                <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center max-w-2xl">
+                  <CopyableCommand command="https://openkt.ai/skill" noPrefix />
+                  <a
+                    href="https://openkt.ai/skill"
+                    className="inline-flex shrink-0 items-center justify-center gap-2 h-11 px-5 rounded-md bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  >
+                    Open the skill
+                    <span aria-hidden>→</span>
+                  </a>
+                </div>
+                <p className="mt-3 text-[12px] font-mono text-warm-500">
+                  works with any agent that can read a URL · claude · cursor · codex · chatgpt
+                </p>
               </div>
             </div>
 
@@ -1127,7 +1157,7 @@ function HarnessStrip() {
               <Kicker>Or skip the CLI · MCP over HTTP</Kicker>
               <h3
                 className="mt-2 text-xl sm:text-2xl tracking-tight text-warm-900 max-w-2xl"
-                style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+                style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
               >
                 Connect a single harness directly.
               </h3>
@@ -1180,7 +1210,7 @@ function Pilot() {
         <Reveal i={1}>
           <h2
             className="mt-2 text-3xl sm:text-4xl tracking-tight text-warm-900 max-w-2xl"
-            style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+            style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
           >
             Starting private pilots.
             <br />
@@ -1270,7 +1300,7 @@ function FAQ() {
             <Reveal i={1}>
               <h2
                 className="mt-2 text-3xl sm:text-4xl tracking-tight text-warm-900"
-                style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+                style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
               >
                 The objections every CTO has, answered.
               </h2>
@@ -1344,7 +1374,7 @@ function FinalCTA() {
             </p>
             <h2
               className="mt-4 text-3xl sm:text-4xl tracking-tight max-w-3xl"
-              style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+              style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
             >
               Your team already has context.
               <br />
@@ -1384,7 +1414,7 @@ function Footer() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-wrap items-center gap-3 justify-between text-xs text-warm-500">
         <div className="flex items-center gap-2">
           <span
-            style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+            style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500 }}
             className="text-warm-700"
           >
             Open KT

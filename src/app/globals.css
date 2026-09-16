@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,400;0,500;0,600;1,400&family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,500;6..12,600&display=swap');
+/* Open Field type trio — Newsreader (titles) · Inter (body) · JetBrains Mono (code/labels/ascii) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,400i&display=swap');
 
 @import "tailwindcss";
 
@@ -12,7 +13,7 @@
 .md-prose h1,
 .md-prose h2,
 .md-prose h3 {
-  font-family: 'Bitter', Georgia, serif;
+  font-family: 'Newsreader', Georgia, serif;
   font-weight: 500;
   margin-top: 0.5rem;
   margin-bottom: 0.25rem;
@@ -64,19 +65,32 @@
 .md-prose th { background: var(--warm-100); font-weight: 600; }
 
 :root {
-  --warm-50: #faf8f5;
-  --warm-100: #f3efe8;
-  --warm-200: #e8e1d5;
-  --warm-300: #d5cabb;
-  --warm-400: #b8a994;
-  --warm-500: #9a8b76;
-  --warm-600: #7d6f5c;
-  --warm-700: #5e5345;
-  --warm-800: #423b30;
-  --warm-900: #2a251d;
-  --accent: #c06830;
-  --accent-light: #e8956a;
-  --accent-muted: #d4a07a;
+  /* Open Field palette, exposed through the landing's existing warm-* names so
+     every Tailwind class re-skins. paper→ink ramp (hue 80 paper, 60 ink). */
+  --warm-50:  oklch(99.2% 0.008 80);  /* paper-0 — page bg   */
+  --warm-100: oklch(97.5% 0.012 80);  /* paper-1            */
+  --warm-200: oklch(95.0% 0.016 80);  /* paper-2            */
+  --warm-300: oklch(88.0% 0.012 80);  /* line / hairlines   */
+  --warm-400: oklch(82.0% 0.008 60);  /* ink-4 — faint      */
+  --warm-500: oklch(64.0% 0.006 60);  /* ink-3              */
+  --warm-600: oklch(48.0% 0.008 60);  /* ink-2              */
+  --warm-700: oklch(32.0% 0.010 60);  /* ink-1              */
+  --warm-800: oklch(26.0% 0.010 60);  /* body text          */
+  --warm-900: oklch(18.0% 0.010 60);  /* ink-0 — titles     */
+
+  /* The one accent — Open Field terracotta amber */
+  --accent:       oklch(63.0% 0.155 50);
+  --accent-light: oklch(72.0% 0.145 52);
+  --accent-muted: oklch(82.0% 0.095 55);
+
+  /* Open Field semantic aliases (available alongside warm-*) */
+  --paper-0: var(--warm-50);  --paper-1: var(--warm-100); --paper-2: var(--warm-200); --paper-3: var(--warm-300);
+  --ink-0: var(--warm-900);   --ink-1: var(--warm-700);   --ink-2: var(--warm-600);   --ink-3: var(--warm-500); --ink-4: var(--warm-400);
+  --amber: var(--accent);     --amber-strong: oklch(54% 0.170 45); --amber-soft: oklch(94.5% 0.040 55);
+  --line: var(--warm-300);
+
+  /* Five earth categories (Open Field) */
+  --c-clay:  #b85e3a; --c-ochre: #b8932a; --c-sand: #a88563; --c-moss: #6b8159; --c-slate: #4f6471;
 }
 
 @theme inline {
@@ -93,12 +107,17 @@
   --color-accent: var(--accent);
   --color-accent-light: var(--accent-light);
   --color-accent-muted: var(--accent-muted);
+
+  /* Open Field type trio → Tailwind font-sans / font-serif / font-mono */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: 'Newsreader', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
 }
 
 body {
   background: var(--warm-50);
   color: var(--warm-800);
-  font-family: 'Nunito Sans', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -327,7 +346,7 @@ body {
 .doc-prose h2,
 .doc-prose h3,
 .doc-prose h4 {
-  font-family: 'Bitter', Georgia, serif;
+  font-family: 'Newsreader', Georgia, serif;
   font-weight: 500;
   color: var(--warm-800);
   margin-top: 1.25em;
