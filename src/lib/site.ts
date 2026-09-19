@@ -20,12 +20,16 @@ export const LICENSE_URL = `${GITHUB_URL}/blob/main/LICENSE`;
 
 /**
  * The paste-into-any-AI setup prompt is served as a static file so agents
- * can also fetch it by URL. `public/setup-prompt.md` is a verbatim copy of
- * `plugin/SETUP_PROMPT.md` in the OpenKT repository (synced from main @ 7307030).
+ * can also fetch it by URL. `public/setup-prompt.md` is a copy of
+ * `plugin/SETUP_PROMPT.md` in the OpenKT repository (synced from main @ 42273b7),
+ * with one change: its three `masti-ai/openkt` references (skill source,
+ * plugin marketplace, git clone) now read `masti-ai/OpenKT-ai`. Upstream still
+ * says `masti-ai/openkt`, which is now a different, private repository.
  *
  * TODO(sync): the prompt is being reworked on `feat/mcp-connect` and may be
  * renamed `plugin/SETUP-PROMPT.md`. When it lands, copy it over
- * `public/setup-prompt.md` unchanged — the page reads that file at build time.
+ * `public/setup-prompt.md` (re-apply the repo name if upstream still has the
+ * old one) — the page reads that file at build time.
  */
 export const SETUP_PROMPT_PATH = "/setup-prompt.md";
 

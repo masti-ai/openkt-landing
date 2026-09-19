@@ -192,7 +192,7 @@ function Hero() {
         </Reveal>
         <Reveal i={3}>
           <h1
-            className="mt-3 text-4xl sm:text-6xl tracking-tight text-warm-900 max-w-4xl leading-[1.05]"
+            className="mt-3 text-4xl sm:text-6xl tracking-tight text-warm-900 max-w-5xl leading-[1.05] text-balance"
             style={SERIF}
           >
             Stop re-explaining your team to every AI.
@@ -422,7 +422,7 @@ function HowItWorks() {
 type Tool = {
   name: string;
   steps?: string;
-  code?: { title: string; text: string; shell?: boolean };
+  code?: { title: string; text: string };
   after?: string;
 };
 
@@ -434,11 +434,7 @@ const TOOLS: Tool[] = [
   },
   {
     name: "Claude Code",
-    code: {
-      title: "terminal",
-      text: `claude mcp add --transport http openkt ${MCP_URL}`,
-      shell: true,
-    },
+    code: { title: "terminal", text: `claude mcp add --transport http openkt ${MCP_URL}` },
     after: "Then run /mcp, choose openkt and sign in.",
   },
   {
@@ -504,11 +500,7 @@ function Setup({ setupPrompt }: { setupPrompt: string }) {
                 )}
                 {t.code && (
                   <div className="mt-3">
-                    {t.code.shell ? (
-                      <CopyableCommand command={t.code.text} label={`Copy ${t.name} command`} />
-                    ) : (
-                      <CopyBlock title={t.code.title} text={t.code.text} label={`Copy ${t.name} config`} />
-                    )}
+                    <CopyBlock title={t.code.title} text={t.code.text} label={`Copy ${t.name} snippet`} />
                   </div>
                 )}
                 {t.after && <p className="mt-2 text-[13px] text-warm-600">{t.after}</p>}
