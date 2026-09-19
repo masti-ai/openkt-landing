@@ -12,3 +12,7 @@
 # routes to S3 without the user noticing.
 
 /install.sh  https://openkt-cli-prod.s3.us-east-1.amazonaws.com/cli/install.sh  302
+
+# The old CLI-era agent skill file now points at the current paste-in setup
+# prompt (MCP-only, no installer scripts).
+/SKILL.md  /setup-prompt.md  301

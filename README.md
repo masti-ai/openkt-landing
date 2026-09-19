@@ -1,6 +1,5 @@
 # openkt-landing
 
-[![Deploy to Cloudflare Pages](https://github.com/masti-ai/openkt-landing/actions/workflows/deploy.yml/badge.svg)](https://github.com/masti-ai/openkt-landing/actions/workflows/deploy.yml)
 [![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Static marketing site for [openkt.ai](https://openkt.ai). Built with
@@ -30,40 +29,40 @@ on the production edge — Cloudflare Pages serves the bundle as-is.
 
 ## Deployment
 
-Pushes to `main` trigger `.github/workflows/deploy.yml`, which runs
-`npm run build` and uploads `./out` to Cloudflare Pages via Wrangler.
+Pushes to `main` fire a GitHub webhook that starts the AWS CodeBuild project
+`openkt-landing-build` (us-east-1, account 724772068721). It runs
+[`buildspec.yml`](buildspec.yml): lint, typecheck, `npm run build`, then
+`wrangler pages deploy out --project-name=openkt-landing --branch=main`.
+The Cloudflare credentials come from AWS Secrets Manager
+(`openkt-staging/cloudflare_pages_token`, `openkt-staging/cloudflare_account_id`).
 
-Required GitHub Actions secrets (set on this repo, not on `masti-ai/openkt`):
+The Cloudflare Pages project `openkt-landing` serves `openkt.ai`. The
+`/install.sh` and `/skill` paths are handled by a Cloudflare router Worker
+outside this repo; Pages serves everything else.
 
-| Secret | Purpose |
-|---|---|
-| `CLOUDFLARE_API_TOKEN` | Token with `Pages:Edit` permission for the openkt-landing project |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID hosting the openkt-landing Pages project |
+## Content
 
-The Cloudflare Pages project is named `openkt-landing` and is bound to the
-apex zone via Cloudflare DNS — `openkt.ai` and `www.openkt.ai` resolve to
-the Pages deployment. The `infra/cloudflare/openkt-router` Worker on
-[`masti-ai/openkt`](https://github.com/masti-ai/openkt) handles
-`/install.sh`, `/cli/*`, and a redirect rule for app-shaped paths
-(`/dashboard`, `/signin`, …) to `app.openkt.ai`. Pages serves everything
-else.
+Copy derives from `docs/product.md` in the OpenKT repository. Outbound URLs
+(GitHub, the MCP endpoint, the Mac download) live in
+[`src/lib/site.ts`](src/lib/site.ts). The paste-in setup prompt is
+[`public/setup-prompt.md`](public/setup-prompt.md), a verbatim copy of the
+OpenKT repository's `plugin/SETUP_PROMPT.md`; the page reads it at build time
+and it is also served at `openkt.ai/setup-prompt.md`.
 
 ## Repo layout
 
 ```
 src/
   app/                 Next.js App Router entry (layout, page, globals.css)
-  components/          Reveal, InstallTabs, CopyableCommand, PilotContact
-  lib/api.ts           Browser-side helper for the pilot-contact endpoint
+  components/          Reveal, CopyableCommand, CopyBlock
+  lib/site.ts          Outbound URLs and the Mac install prompt
 e2e/                   Playwright specs for the live landing
-.github/workflows/
-  deploy.yml           Cloudflare Pages deploy on push to main
+buildspec.yml          CodeBuild: lint, typecheck, build, wrangler pages deploy
 next.config.ts         output: "export" — static HTML build
 playwright.config.ts   Playwright runner config (see e2e/)
 ```
 
-The pilot-contact form posts to the BFF at `https://api.openkt.ai/v1/pilot-contact`;
-the landing itself never holds state.
+The landing holds no state and calls no API.
 
 ## History
 
