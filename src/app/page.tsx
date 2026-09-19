@@ -1,15 +1,33 @@
-import Link from "next/link";
-import type { Metadata } from "next";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import CopyBlock from "@/components/CopyBlock";
 import CopyableCommand from "@/components/CopyableCommand";
-import InstallTabs from "@/components/InstallTabs";
-import PilotContact from "@/components/PilotContact";
 import Reveal from "@/components/Reveal";
+import {
+  DMG_URL,
+  GITHUB_URL,
+  INSTALL_NOTE_URL,
+  LICENSE_URL,
+  MAC_INSTALL_PROMPT,
+  MCP_URL,
+  PRODUCT_DOC_URL,
+  SETUP_PROMPT_PATH,
+  XATTR_COMMAND,
+} from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Open KT — the shared intelligence layer for AI-native teams",
-  description:
-    "Open KT (Open Knowledge Transfer) turns every agentic discovery into permanent team capital. Compounding context. One brain, every harness. Works with Claude Code, Codex, Cursor, and anything that speaks MCP.",
-};
+/* -------------------------------------------------------------------------
+ * Copy source: masti-ai/OpenKT-ai docs/product.md and README.md.
+ * No metrics, testimonials or logos — every claim traces to product.md.
+ * ------------------------------------------------------------------------- */
+
+/** The paste-in setup prompt: everything below the first `---` of the file. */
+function readSetupPrompt(): string {
+  const raw = readFileSync(path.join(process.cwd(), "public", SETUP_PROMPT_PATH), "utf8");
+  const parts = raw.split(/\n---\n/);
+  return (parts.length > 1 ? parts.slice(1).join("\n---\n") : raw).trim();
+}
+
+const SERIF = { fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 } as const;
 
 /* -------------------------------------------------------------------------
  * Building blocks
@@ -28,17 +46,23 @@ function BoxCorners({ tone = "warm" }: { tone?: "warm" | "dark" | "accent" }) {
   );
 }
 
-function Kicker({ children }: { children: React.ReactNode }) {
+function Kicker({ children, tone = "warm" }: { children: React.ReactNode; tone?: "warm" | "accent" }) {
   return (
-    <p className="text-[11px] uppercase tracking-[0.2em] text-warm-500 font-mono">
+    <p
+      className={`text-[11px] uppercase tracking-[0.2em] font-mono ${
+        tone === "accent" ? "text-accent" : "text-warm-500"
+      }`}
+    >
       {children}
     </p>
   );
 }
 
-const HERO_FRAME = `┌─────────────────────────────────────────────────────────────────┐
-│  OPEN  KT  ›  THE  SHARED  INTELLIGENCE  LAYER                  │
-└─────────────────────────────────────────────────────────────────┘`;
+function frame(text: string, width = 67) {
+  return `┌${"─".repeat(width)}┐\n│${text.padEnd(width)}│\n└${"─".repeat(width)}┘`;
+}
+
+const HERO_FRAME = frame("  OPEN  KT  ›  SHARED  CONTEXT  FOR  YOUR  TEAM'S  AI");
 
 const HERO_ASCII = `
    ██████╗ ██████╗ ███████╗███╗   ██╗     ██╗  ██╗████████╗
@@ -50,140 +74,98 @@ const HERO_ASCII = `
             open  knowledge  transfer · over MCP
 `;
 
-// Substrate diagram — every harness in, one shared brain out.
-const SUBSTRATE_ASCII = `
-   Claude Code ─┐                              ┌─▶  Memory
-       Codex ───┤                              ├─▶  Skills
-      Cursor ───┼──▶  [  O P E N   K T  ]  ───┼─▶  Workflows
-    OpenCode ───┤         one shared brain     ├─▶  Receipts
-       Aider ───┘                              └─▶  Audit trail
+// Every tool in, one shared store, recall out — filtered by access.
+const FLOW_ASCII = `
+          Claude ─┐                                       ┌─▶  your next session
+          Cowork ─┤                                       │
+         ChatGPT ─┼─▶  [  O P E N   K T  ]  ─── recall ───┼─▶  a teammate's AI
+           Codex ─┤     save · attribute · grant          │
+          Cursor ─┤                                       └─▶  only what they may see
+  browser agents ─┘
 `;
 
-// Compact at-a-glance Before / Open KT comparison — used on the bridge strip.
-const COMPARE_ASCII = `
-   ┌─  WITHOUT  ────────────────────┐     ┌─  WITH  OPEN  KT  ────────────────┐
-   │  > read 40 files…              │     │  > recall STAGING_FIX_01          │
-   │  > 47k tokens · 6m 14s         │     │  > 412 tokens · 5s                │
-   │  > re-derived yesterday's fix  │     │  > inherited the team's last run  │
-   └────────────────────────────────┘     └───────────────────────────────────┘
-`;
-
-// One-line "what arrives in the next session" mock — used on Solution intro.
-const RECEIPT_ASCII = `
-  [recall]  STAGING_FIX_01   scope:ORG   src:agent-A   replays:14   tok:328k saved
-`;
-
-// Thesis maxim — sits between Hero and Problem as a punctuation beat.
-// Lifted from docs/product-thesis.md core maxim. Carries the
-// commodity-vs-moat frame that re-shapes how a buyer reads the
-// rest of the page.
-const MAXIM_ASCII = `
-   ┌──────────────────────────────────────────────────────────────────┐
-   │   the harness is a commodity   ·   the intelligence is the moat  │
-   └──────────────────────────────────────────────────────────────────┘
-`;
-
-// Token-tax receipt — a one-line ledger entry that visualises the
-// "Stochastic Tax" the Problem section names. Lives just above the
-// Problem bullets so the cost of starting cold has a face.
-const TAX_ASCII = `
-  [session·19:42·CLAUDE-CODE]  cold start  ·  read 47k tok  ·  spent  $4.71  ·  re-derived STAGING_FIX_01  ·  again
-`;
+const TRY_FOR_MAC_CLASS =
+  "inline-flex items-center justify-center gap-2 h-11 px-5 rounded-md bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors shadow-sm focus-ring";
+const OUTLINE_CLASS =
+  "inline-flex items-center justify-center gap-2 h-11 px-5 rounded-md border border-warm-300 text-warm-700 text-sm font-medium hover:border-warm-500 hover:text-warm-900 transition-colors focus-ring";
 
 /* -------------------------------------------------------------------------
  * Page
  * ------------------------------------------------------------------------- */
 
 export default function LandingPage() {
+  const setupPrompt = readSetupPrompt();
   return (
     <main className="bg-warm-50 text-warm-800 antialiased overflow-x-hidden">
-      <PilotBanner />
+      <OpenSourceBanner />
       <TopNav />
       <Hero />
-      <Maxim />
       <Problem />
-      <Compare />
-      <Solution />
       <HowItWorks />
-      <SampleRun />
-      <HarnessStrip />
-      <Pilot />
-      <FAQ />
-      <FinalCTA />
+      <Setup setupPrompt={setupPrompt} />
+      <Desktop />
+      <OpenSource />
       <Footer />
     </main>
   );
 }
 
 /* -------------------------------------------------------------------------
- * Pilot banner — slim, full-bleed, dismissible-feel link to #pilot.
+ * Banner + nav
  * ------------------------------------------------------------------------- */
 
-function PilotBanner() {
+function OpenSourceBanner() {
   return (
     <a
-      href="#pilot"
+      href={GITHUB_URL}
       className="group block w-full bg-warm-900 text-warm-50 hover:bg-warm-800 transition-colors"
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-center gap-3 text-[11px] sm:text-[12px] tracking-[0.18em] uppercase font-mono">
         <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent animate-pulse-soft" />
-        <span className="text-warm-200">Open KT is in private pilot</span>
+        <span className="text-warm-200">OpenKT is open source</span>
         <span className="hidden sm:inline text-warm-500">·</span>
-        <span className="hidden sm:inline text-warm-300">5–10 design partners</span>
+        <span className="hidden sm:inline text-warm-300">Apache-2.0</span>
         <span className="text-accent group-hover:translate-x-0.5 transition-transform">
-          → Join the pilot
+          → GitHub
         </span>
       </div>
     </a>
   );
 }
 
-/* -------------------------------------------------------------------------
- * Nav
- * ------------------------------------------------------------------------- */
-
 function TopNav() {
   return (
     <header className="border-b border-warm-200 bg-warm-50/85 backdrop-blur sticky top-0 z-30">
       <div className="max-w-6xl mx-auto h-14 px-4 sm:px-6 flex items-center gap-6">
-        <span className="flex items-baseline gap-2">
-          <span
-            className="text-[15px] tracking-tight text-warm-900"
-            style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
-          >
-            Open KT
-          </span>
-          <span className="hidden sm:inline text-[10px] uppercase tracking-[0.2em] text-warm-400 font-mono">
-            by openkt
-          </span>
-        </span>
+        <a href="#top" className="text-[15px] tracking-tight text-warm-900" style={SERIF}>
+          OpenKT
+        </a>
         <nav className="hidden md:flex items-center gap-5 text-[13px] text-warm-500">
-          <a href="#problem" className="hover:text-warm-900 transition-colors">Problem</a>
-          <a href="#compare" className="hover:text-warm-900 transition-colors">Compare</a>
-          <a href="#solution" className="hover:text-warm-900 transition-colors">Solution</a>
           <a href="#how" className="hover:text-warm-900 transition-colors">How it works</a>
-          <a href="#pilot" className="hover:text-warm-900 transition-colors">Pilot</a>
-          <a href="#faq" className="hover:text-warm-900 transition-colors">FAQ</a>
+          <a href="#setup" className="hover:text-warm-900 transition-colors">Setup</a>
+          <a href="#desktop" className="hover:text-warm-900 transition-colors">Mac app</a>
+          <a href="#open-source" className="hover:text-warm-900 transition-colors">Open source</a>
+          <a href={GITHUB_URL} className="hover:text-warm-900 transition-colors">GitHub</a>
         </nav>
         <div className="flex-1" />
-        <Link
-          href="#pilot"
-          className="inline-flex items-center h-8 px-3 rounded-md bg-accent text-white text-[13px] font-medium hover:bg-accent/90 transition-colors shadow-sm"
+        <a
+          href={DMG_URL}
+          className="inline-flex items-center h-8 px-3 rounded-md bg-accent text-white text-[13px] font-medium hover:bg-accent/90 transition-colors shadow-sm whitespace-nowrap"
         >
-          Join the pilot →
-        </Link>
+          Try free for Mac
+        </a>
       </div>
     </header>
   );
 }
 
 /* -------------------------------------------------------------------------
- * Hero — heading preserved verbatim per user direction.
+ * Hero — the problem, then the promise. product.md › What it is / The problem
  * ------------------------------------------------------------------------- */
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden border-b border-warm-200">
+    <section id="top" className="relative overflow-hidden border-b border-warm-200">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-[0.07] animate-drift"
@@ -194,9 +176,9 @@ function Hero() {
         }}
       />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28 relative">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24 relative">
         <Reveal i={0}>
-          <pre className="hidden sm:block text-[10px] sm:text-[11px] leading-[1.2] font-mono text-warm-500 mb-4 select-none">
+          <pre className="hidden sm:block text-[10px] sm:text-[11px] leading-[1.2] font-mono text-warm-500 mb-4 select-none overflow-x-auto">
 {HERO_FRAME}
           </pre>
         </Reveal>
@@ -206,16 +188,18 @@ function Hero() {
           </pre>
         </Reveal>
         <Reveal i={2}>
-          <Kicker>The Shared Intelligence Layer</Kicker>
+          <Kicker>Open-source shared context for teams</Kicker>
         </Reveal>
         <Reveal i={3}>
           <h1
-            className="mt-3 text-4xl sm:text-6xl font-medium tracking-tight text-warm-900 max-w-4xl leading-[1.05]"
-            style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
+            className="mt-3 text-4xl sm:text-6xl tracking-tight text-warm-900 max-w-4xl leading-[1.05]"
+            style={SERIF}
           >
-            Your team&apos;s AI shouldn&apos;t
+            Stop re-explaining your team to every AI.
             <br />
-            <span className="text-warm-500">start from zero.</span>
+            <span className="text-warm-500">
+              What one person&apos;s AI learns, the whole team&apos;s AI knows.
+            </span>
             <span
               className="inline-block w-[0.55ch] h-[0.9em] ml-2 align-[-0.1em] bg-accent animate-blink"
               aria-hidden
@@ -223,41 +207,42 @@ function Hero() {
           </h1>
         </Reveal>
         <Reveal i={4}>
-          <p className="mt-6 max-w-xl text-base sm:text-lg leading-relaxed text-warm-600">
-            One shared brain for every coding agent on your team. They inherit yesterday&apos;s
-            decisions, share today&apos;s discoveries, and skip the 47k-token repo scan every
-            morning.
+          <p className="mt-6 max-w-2xl text-base sm:text-lg leading-relaxed text-warm-600">
+            OpenKT saves decisions and context from every AI tool and meeting, and hands them to
+            your teammates&apos; agents — only what each person may see.
           </p>
         </Reveal>
         <Reveal i={5}>
           <ul className="mt-7 grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-2 max-w-2xl text-[13px] text-warm-700">
             <li className="flex items-baseline gap-2">
               <span className="text-accent font-mono">▸</span>
-              <span><span className="text-warm-900 font-medium">One brain</span> across harnesses</span>
+              <span><span className="text-warm-900 font-medium">Any MCP tool</span> connects</span>
             </li>
             <li className="flex items-baseline gap-2">
               <span className="text-accent font-mono">▸</span>
-              <span><span className="text-warm-900 font-medium">Day-one ready</span> agents</span>
+              <span><span className="text-warm-900 font-medium">Every item</span> attributed</span>
             </li>
             <li className="flex items-baseline gap-2">
               <span className="text-accent font-mono">▸</span>
-              <span><span className="text-warm-900 font-medium">~99%</span> less re-exploration</span>
+              <span><span className="text-warm-900 font-medium">Access</span> like a code host</span>
             </li>
           </ul>
         </Reveal>
         <Reveal i={6}>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link
-              href="#pilot"
-              className="inline-flex items-center h-11 px-5 rounded-md bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-all shadow-sm hover:scale-[1.02] focus-ring"
-            >
-              Join the pilot
-            </Link>
-            <a
-              href="#sample-run"
-              className="inline-flex items-center h-11 px-5 rounded-md border border-warm-300 text-warm-700 text-sm font-medium hover:border-warm-500 hover:text-warm-900 transition-colors focus-ring"
-            >
-              Watch a sample run →
+          <div className="mt-8 flex flex-wrap items-start gap-3">
+            <div className="flex flex-col">
+              <a href={DMG_URL} className={TRY_FOR_MAC_CLASS}>
+                Try free for Mac
+              </a>
+              <span className="mt-2 text-[11px] font-mono text-warm-500">
+                Apple silicon · free · open source
+              </span>
+            </div>
+            <a href="#setup" className={OUTLINE_CLASS}>
+              Add to your AI tool <span aria-hidden>↓</span>
+            </a>
+            <a href={GITHUB_URL} className={OUTLINE_CLASS}>
+              View on GitHub <span aria-hidden>→</span>
             </a>
           </div>
         </Reveal>
@@ -267,468 +252,51 @@ function Hero() {
 }
 
 /* -------------------------------------------------------------------------
- * Maxim — slim full-bleed band that lands the thesis line between Hero
- * and Problem. Carries the "commodity vs moat" frame so the reader
- * walks into Problem already on our terms.
+ * Problem band — product.md › The problem (the three losses)
  * ------------------------------------------------------------------------- */
 
-function Maxim() {
-  return (
-    <section
-      aria-label="Open KT thesis"
-      className="border-b border-warm-200 bg-warm-100/50 py-10 sm:py-12"
-    >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <Reveal>
-          <pre className="hidden md:block text-[10.5px] sm:text-[11px] leading-tight font-mono text-warm-500 select-none mb-6 overflow-x-auto whitespace-pre">
-{MAXIM_ASCII}
-          </pre>
-        </Reveal>
-        <Reveal i={1}>
-          <p className="text-center text-[15px] sm:text-base text-warm-700 max-w-2xl mx-auto leading-relaxed">
-            Every team will swap Cursor for Claude Code for Codex three times this year.
-            What stays — what compounds — is what the team has{" "}
-            <span className="text-warm-900 font-medium">already learned</span>. That layer
-            is the product.
-          </p>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------
- * Tweet card — social proof, used inside the Problem section.
- * ------------------------------------------------------------------------- */
-
-function TweetCard({
-  handle,
-  name,
-  role,
-  url,
-  body,
-}: {
-  handle: string;
-  name: string;
-  role: string;
-  url: string;
-  body: string;
-}) {
-  return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block relative bg-white p-5 hover-lift focus-ring"
-    >
-      <BoxCorners />
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-8 h-8 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center text-[11px] font-medium text-accent uppercase">
-          {name.slice(0, 1)}
-        </div>
-        <div className="min-w-0">
-          <div className="text-sm font-medium text-warm-900 leading-tight">{name}</div>
-          <div className="text-[11px] text-warm-500 leading-tight">
-            {handle} · {role}
-          </div>
-        </div>
-        <div className="flex-1" />
-        <svg
-          aria-hidden
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          className="text-warm-400"
-          fill="currentColor"
-        >
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-        </svg>
-      </div>
-      <p className="text-[13px] text-warm-700 leading-relaxed">{body}</p>
-    </a>
-  );
-}
-
-/* -------------------------------------------------------------------------
- * Problem (PAS) — Stochastic Tax framing without the "amnesia" word.
- * ------------------------------------------------------------------------- */
-
-function Problem() {
-  return (
-    <section id="problem" className="border-b border-warm-200 py-20 sm:py-24 bg-warm-100/40">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 items-center">
-          <div className="lg:col-span-3 space-y-6">
-            <Reveal>
-              <Kicker>The cost of starting from zero</Kicker>
-            </Reveal>
-            <Reveal i={1}>
-              <h2
-                className="text-3xl sm:text-4xl tracking-tight text-warm-900 max-w-3xl"
-                style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
-              >
-                Your agents pay rent every morning,
-                <br />
-                <span className="text-warm-500">on knowledge they already had.</span>
-              </h2>
-            </Reveal>
-
-            <Reveal i={2}>
-              <pre className="hidden md:block text-[10.5px] leading-tight font-mono text-warm-500 select-none mt-4 overflow-x-auto whitespace-pre">
-{TAX_ASCII}
-              </pre>
-            </Reveal>
-
-            <Reveal i={2}>
-              <ul className="space-y-3 max-w-xl">
-                <li className="flex items-baseline gap-3 text-[14.5px] text-warm-800">
-                  <span className="font-mono text-accent shrink-0">▸</span>
-                  <span>
-                    A new chat opens. The agent re-scans 40 files to find a fix
-                    your teammate&apos;s agent shipped yesterday.
-                  </span>
-                </li>
-                <li className="flex items-baseline gap-3 text-[14.5px] text-warm-800">
-                  <span className="font-mono text-accent shrink-0">▸</span>
-                  <span>
-                    The keep-alive setting, the auth regex, the deploy
-                    incantation — none of it survives the chat window.
-                  </span>
-                </li>
-                <li className="flex items-baseline gap-3 text-[14.5px] text-warm-800">
-                  <span className="font-mono text-accent shrink-0">▸</span>
-                  <span>
-                    Switch from Claude Code to Codex next quarter — the rest
-                    goes with it.
-                  </span>
-                </li>
-              </ul>
-            </Reveal>
-
-            <Reveal i={3}>
-              <p className="text-[13px] text-warm-500 pt-2">
-                The harness is rented. The intelligence should be owned.
-              </p>
-            </Reveal>
-          </div>
-
-          <Reveal direction="right" i={2} className="lg:col-span-2">
-            <div className="relative bg-white p-7">
-              <BoxCorners />
-              <div className="text-[10px] uppercase tracking-[0.2em] text-warm-500 font-mono mb-5">
-                What every session costs you
-              </div>
-              <ul className="space-y-4">
-                {[
-                  ["~47k", "tokens", "spent re-exploring per session"],
-                  ["3×", "/ year", "harness migrations wipe your context"],
-                  ["80%", "lost", "of learnings die in chat windows"],
-                  ["0%", "by default", "of it compounds for the team"],
-                ].map(([v, unit, l]) => (
-                  <li key={l} className="flex items-baseline gap-4">
-                    <span className="flex items-baseline gap-1.5 w-24 shrink-0">
-                      <span className="font-mono tabular-nums text-warm-900 text-2xl font-medium">
-                        {v}
-                      </span>
-                      <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-warm-500">
-                        {unit}
-                      </span>
-                    </span>
-                    <span className="text-[13px] text-warm-700 leading-snug">{l}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </Reveal>
-        </div>
-
-        {/* Tweet pair — industry voices echoing the problem framing. */}
-        <div className="mt-12 pt-10 border-t border-warm-200/80">
-          <Reveal>
-            <p className="text-[10px] uppercase tracking-[0.22em] text-warm-500 font-mono mb-5">
-              People who saw this coming
-            </p>
-          </Reveal>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Reveal i={1} direction="left">
-              <TweetCard
-                handle="@garrytan"
-                name="Garry Tan"
-                role="CEO, Y Combinator"
-                url="https://x.com/garrytan/status/2043198780800197025"
-                body="Skills and memory are the real moat. The harness is a commodity — you'll switch yours three times this year. What survives is the knowledge and workflow your agents carry between runs."
-              />
-            </Reveal>
-            <Reveal i={2} direction="right">
-              <TweetCard
-                handle="@theo"
-                name="Theo"
-                role="t3.gg"
-                url="https://x.com/theo/status/2043819374889554261"
-                body="Thin harness, fat skills. Anyone still shipping a fat harness in 2026 is building on sand — the agents that win are the ones that share context, not the ones that re-learn it every session."
-              />
-            </Reveal>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------
- * Compare — ICY-style at-a-glance row. Side-by-side rows, one per dimension.
- * Sits between Problem and Solution as a fast scannable transition.
- * ------------------------------------------------------------------------- */
-
-const COMPARE_ROWS: { label: string; before: string; after: string }[] = [
-  { label: "Per session",          before: "47k tokens re-explored",   after: "300-token recall" },
-  { label: "First useful action",  before: "~6 minutes",                after: "~5 seconds" },
-  { label: "Token bill / month",   before: "Scales linearly with sessions", after: "Sub-linear — recall caps growth" },
-  { label: "Onboarding a new agent", before: "Hours of context-loading", after: "Inherits the team brief on turn 1" },
-  { label: "When you switch harnesses", before: "Context dies with it", after: "Memory + skills travel" },
-  { label: "Team capital",         before: "Dies in chat windows",     after: "Compounds on disk" },
-  { label: "Audit trail",          before: "None — try git blame",     after: "Receipt per recall" },
-];
-
-function Compare() {
-  return (
-    <section
-      id="compare"
-      className="relative border-b border-warm-200 py-16 sm:py-20 bg-warm-50"
-    >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <Reveal>
-          <Kicker>At a glance</Kicker>
-        </Reveal>
-        <Reveal i={1}>
-          <h2
-            className="mt-2 text-2xl sm:text-3xl tracking-tight text-warm-900 max-w-3xl"
-            style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
-          >
-            Same prompt. Different bill.
-          </h2>
-        </Reveal>
-
-        <Reveal i={2}>
-          <pre className="hidden md:block mt-8 text-[10.5px] leading-tight text-warm-500 font-mono overflow-x-auto whitespace-pre select-none">
-{COMPARE_ASCII}
-          </pre>
-        </Reveal>
-
-        <Reveal i={3}>
-          <div className="mt-8 relative bg-white">
-            <BoxCorners />
-            {/* header row */}
-            <div className="grid grid-cols-3 px-5 sm:px-7 py-3 border-b border-warm-200 text-[10px] uppercase tracking-[0.2em] font-mono text-warm-500">
-              <span></span>
-              <span>Without</span>
-              <span className="text-accent">With Open KT</span>
-            </div>
-            <ul>
-              {COMPARE_ROWS.map((r, i) => (
-                <li
-                  key={r.label}
-                  className={`grid grid-cols-3 px-5 sm:px-7 py-4 items-baseline ${
-                    i < COMPARE_ROWS.length - 1 ? "border-b border-warm-200/70" : ""
-                  }`}
-                >
-                  <span className="text-[12px] uppercase tracking-[0.16em] font-mono text-warm-500 pr-3">
-                    {r.label}
-                  </span>
-                  <span className="flex items-baseline gap-2 text-[13.5px] text-warm-700 pr-3">
-                    <span className="font-mono text-warm-400 shrink-0">×</span>
-                    <span>{r.before}</span>
-                  </span>
-                  <span className="flex items-baseline gap-2 text-[13.5px] text-warm-900 font-medium">
-                    <span className="font-mono text-accent shrink-0">✓</span>
-                    <span>{r.after}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------
- * Solution — three OneCards (Memory / Skills / Workflows). Replaces both
- * the old "TheLayer" and "UseCases" sections — single source of truth.
- * ------------------------------------------------------------------------- */
-
-type Example = { id: string; insight: string; payoff: string };
-type OneCard = {
-  n: string;
-  layer: string;
-  title: string;
-  bullets: string[];
-  examples: Example[];
-};
-
-const ONE_CARDS: OneCard[] = [
-  {
-    n: "01",
-    layer: "Memory",
-    title: "Discoveries that compound.",
-    bullets: [
-      "One agent finds the answer; every agent after recalls it.",
-      "300-token lookup, not a 47k-token rescan.",
-      "Scoped: personal → project → org. Promotion is reviewed.",
-    ],
-    examples: [
-      {
-        id: "STAGING_FIX_01",
-        insight: "Postgres drops staging connections without a 60s keep-alive.",
-        payoff: "14 replays this week · 328k tokens saved · 0 reopens",
-      },
-      {
-        id: "AUTH_REGEX_NOTE",
-        insight: "JWT subject claim is base64url, not base64. Strip padding.",
-        payoff: "9 replays · ended a 3-day cross-team bug loop",
-      },
-      {
-        id: "DEPLOY_INCANT",
-        insight: "Cloud Run revision must pin --concurrency=8 for our queue worker.",
-        payoff: "6 replays · 0 outages in the 8 weeks since promoted",
-      },
-    ],
-  },
+const LOSSES: { n: string; title: string; body: string }[] = [
+  { n: "01", title: "Between sessions", body: "Tomorrow's session starts cold." },
   {
     n: "02",
-    layer: "Skills",
-    title: "Procedures every agent inherits.",
-    bullets: [
-      "Authored once by your lead — every harness on the team ships day-one ready.",
-      "L1 metadata loads at startup; L2 expertise pulls only on invoke.",
-      "Versioned, scoped, replaceable — never a copy-paste prompt.",
-    ],
-    examples: [
-      {
-        id: "TAILWIND_STYLE_COP",
-        insight: "Audits component naming, contrast, focus, prefers-reduced-motion.",
-        payoff: "Run by every UI agent · 0 contrast regressions in 6 weeks",
-      },
-      {
-        id: "PR_DESCRIBE",
-        insight: "Writes PR title + summary + test plan in your team's house style.",
-        payoff: "44 PRs this month · review-ready on first push",
-      },
-      {
-        id: "MIGRATION_REVIEW",
-        insight: "Flags non-backwards-compatible schema diffs before they ship.",
-        payoff: "Caught 3 silent breakages last quarter · zero post-merge rollbacks",
-      },
-    ],
+    title: "Between tools",
+    body: "What you told your coding agent, your chat assistant never hears. Meetings reach no tool at all.",
   },
   {
     n: "03",
-    layer: "Workflows",
-    title: "Routine work at code speed.",
-    bullets: [
-      "Stable patterns get promoted to deterministic ADK pipelines.",
-      "The LLM shapes intent — the pipeline runs the mechanical part.",
-      "Stop paying LLM rates for sequences that never vary.",
-    ],
-    examples: [
-      {
-        id: "AUTO_RELEASE_SWEEP",
-        insight: "Bumps versions, regenerates docs, opens release PR, posts changelog.",
-        payoff: "60-min ritual → 90s deterministic run · runs every Friday",
-      },
-      {
-        id: "ADK_DEPLOY",
-        insight: "Builds, runs migrations gated by health checks, promotes if green.",
-        payoff: "8 deploys/week · 0 prod rollbacks since adopted",
-      },
-      {
-        id: "INCIDENT_TRIAGE",
-        insight: "Pulls logs, paginates Sentry, drafts the incident doc skeleton.",
-        payoff: "First-pass postmortem in 90s · saves the on-call 30 min",
-      },
-    ],
+    title: "Between people",
+    body: "A teammate's AI re-derives what yours learned last week, or gets it wrong.",
   },
 ];
 
-function Solution() {
+function Problem() {
   return (
-    <section id="solution" className="border-b border-warm-200 py-20 sm:py-24">
+    <section
+      id="problem"
+      aria-label="The problem"
+      className="border-b border-warm-200 bg-warm-100/50 py-14 sm:py-16"
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <Reveal>
-          <Kicker>Solution · Three layers</Kicker>
-        </Reveal>
-        <Reveal i={1}>
-          <h2
-            className="mt-2 text-3xl sm:text-4xl tracking-tight text-warm-900 max-w-3xl"
-            style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
-          >
-            Three layers of compounding intelligence.
-          </h2>
-        </Reveal>
-        <Reveal i={2}>
-          <p className="mt-3 text-warm-600 leading-relaxed max-w-2xl">
-            Throwaway chat becomes durable team capital — searchable, scope-aware, traceable to the session that earned it.
+          <p className="text-[15px] sm:text-base text-warm-700 max-w-3xl leading-relaxed">
+            People spend a real part of their day explaining things to AI tools: how the team
+            deploys, what the customer asked for, which approach was already tried and dropped.{" "}
+            <span className="text-warm-900 font-medium">
+              That explanation is thrown away three times over.
+            </span>
           </p>
         </Reveal>
-        <Reveal i={3}>
-          <pre className="hidden md:block mt-6 text-[10.5px] leading-tight text-warm-500 font-mono select-none overflow-x-auto whitespace-pre">
-{RECEIPT_ASCII}
-          </pre>
-        </Reveal>
-
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-5">
-          {ONE_CARDS.map((c, i) => (
-            <Reveal key={c.n} i={3 + i} as="article">
-              <article className="one-card p-6 sm:p-7 flex flex-col h-full">
-                <div className="flex items-baseline gap-3 mb-4">
-                  <span className="font-mono text-[11px] tabular-nums text-warm-500">
-                    [ {c.n} ]
-                  </span>
-                  <span className="text-[10px] uppercase tracking-[0.2em] font-mono text-accent">
-                    {c.layer}
-                  </span>
-                </div>
-                <h3
-                  className="text-lg font-medium text-warm-900 mb-3"
-                  style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
-                >
-                  {c.title}
-                </h3>
-                <ul className="space-y-1.5 mb-5">
-                  {c.bullets.map((b) => (
-                    <li
-                      key={b}
-                      className="flex items-baseline gap-2 text-[13px] text-warm-700 leading-snug"
-                    >
-                      <span className="font-mono text-accent shrink-0">▸</span>
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="mt-auto pt-4 border-t border-warm-200/80">
-                  <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-warm-500 mb-3">
-                    On disk · examples
-                  </div>
-                  <ul className="space-y-3">
-                    {c.examples.map((ex) => (
-                      <li key={ex.id}>
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="inline-block w-1 h-1 rounded-full bg-accent/70" />
-                          <span className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-warm-500">
-                            {ex.id}
-                          </span>
-                        </div>
-                        <p className="text-[12.5px] text-warm-800 leading-snug">{ex.insight}</p>
-                        <p className="mt-0.5 text-[10.5px] text-warm-500 leading-snug font-mono">
-                          ▸ {ex.payoff}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </article>
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {LOSSES.map((l, i) => (
+            <Reveal key={l.n} i={i + 1}>
+              <div className="relative h-full bg-white p-5">
+                <BoxCorners />
+                <span className="font-mono text-[11px] tabular-nums text-warm-400">{l.n}</span>
+                <h2 className="mt-1 text-base text-warm-900" style={SERIF}>
+                  {l.title}
+                </h2>
+                <p className="mt-1.5 text-[13.5px] text-warm-700 leading-relaxed">{l.body}</p>
+              </div>
             </Reveal>
           ))}
         </div>
@@ -738,46 +306,43 @@ function Solution() {
 }
 
 /* -------------------------------------------------------------------------
- * How It Works — Observe → Promote → Inherit
+ * How it works — connect → save → recall. product.md › How it works, Principles
  * ------------------------------------------------------------------------- */
 
 const STEPS: { n: string; title: string; bullets: string[] }[] = [
   {
     n: "01",
-    title: "Observe.",
+    title: "Connect your AI tools.",
     bullets: [
-      "Watches every session — recalls, skill runs, closed tasks.",
-      "Mines the patterns your team keeps repeating.",
+      "Claude, Cowork, ChatGPT, Codex, Cursor and browser agents connect through MCP.",
+      "One URL. You sign in through your browser — never a token in a chat.",
     ],
   },
   {
     n: "02",
-    title: "Promote.",
+    title: "They save as you work.",
     bullets: [
-      "Useful personal memory → project memory.",
-      "Repeated prompt sequence → candidate skill.",
-      "Stable skill → deterministic workflow.",
-      "Reviewed before it escalates. Every promotion leaves a receipt.",
+      "Decisions, facts, how-tos and open questions become short statements that stand on their own.",
+      "Each one is attributed to who said it and the session it came from.",
     ],
   },
   {
     n: "03",
-    title: "Inherit.",
+    title: "Every teammate's AI recalls them.",
     bullets: [
-      "Next session opens with the relevant org context attached.",
-      "Picks up where a teammate's agent left off.",
-      "Routine sequences offload to the pipeline. Each loop costs less.",
+      "At the start of a session, and whenever the model needs it.",
+      "Only what that person is allowed to see — access is enforced inside the search, not after it.",
     ],
   },
 ];
 
 function HowItWorks() {
   return (
-    <section id="how" className="border-b border-warm-200 py-20 sm:py-24 bg-warm-100/40">
+    <section id="how" className="border-b border-warm-200 py-20 sm:py-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <Reveal>
           <pre className="hidden md:block text-[10.5px] leading-tight text-warm-500 font-mono mb-10 select-none overflow-x-auto whitespace-pre">
-{SUBSTRATE_ASCII}
+{FLOW_ASCII}
           </pre>
         </Reveal>
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
@@ -786,16 +351,14 @@ function HowItWorks() {
               <Kicker>How it works</Kicker>
             </Reveal>
             <Reveal i={1}>
-              <h2
-                className="text-3xl sm:text-4xl tracking-tight text-warm-900"
-                style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
-              >
-                Observe → Promote → Inherit.
+              <h2 className="text-3xl sm:text-4xl tracking-tight text-warm-900" style={SERIF}>
+                Connect → Save → Recall.
               </h2>
             </Reveal>
             <Reveal i={2}>
               <p className="text-warm-700 text-[15px] leading-relaxed">
-                One agent&apos;s discovery becomes an org-wide capability. Every transition leaves a receipt. Every receipt seeds the next observation.
+                Everything works with only the MCP server connected. The Mac app adds notes, voice
+                and screenshots; hooks improve it where a tool has them. Neither is required.
               </p>
             </Reveal>
           </div>
@@ -823,10 +386,7 @@ function HowItWorks() {
                       {s.n}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <h3
-                        className="text-base font-medium mb-2"
-                        style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
-                      >
+                      <h3 className="text-base mb-2" style={SERIF}>
                         {s.title}
                       </h3>
                       <ul className="space-y-1.5">
@@ -837,13 +397,7 @@ function HowItWorks() {
                               dark ? "text-warm-200" : "text-warm-700"
                             }`}
                           >
-                            <span
-                              className={`font-mono shrink-0 ${
-                                dark ? "text-accent" : "text-accent"
-                              }`}
-                            >
-                              ▸
-                            </span>
+                            <span className="font-mono shrink-0 text-accent">▸</span>
                             <span>{b}</span>
                           </li>
                         ))}
@@ -861,512 +415,321 @@ function HowItWorks() {
 }
 
 /* -------------------------------------------------------------------------
- * Sample Run — split-screen terminal: Naive vs Open KT.
- * Lines stagger in via .term-line (CSS) when the terminal becomes visible.
+ * Setup — MCP URL, per-tool one-liners, the paste-in prompt.
+ * Source: openkt-next plugin/SETUP_PROMPT.md (step 2 + step 3).
  * ------------------------------------------------------------------------- */
 
-type RunLineKind = "user" | "agent" | "openkt" | "meta" | "ok" | "warn";
+type Tool = {
+  name: string;
+  steps?: string;
+  code?: { title: string; text: string; shell?: boolean };
+  after?: string;
+};
 
-const NAIVE_LINES: ReadonlyArray<readonly [RunLineKind, string]> = [
-  ["user", "Prepare staging for the new deploy."],
-  ["agent", "Reading 40 files to find staging config…"],
-  ["meta", "↳ tokens consumed: 47,184"],
-  ["agent", "Trying connection — drops after 38s."],
-  ["agent", "Re-checking middleware…"],
-  ["meta", "↳ tokens consumed: 71,902"],
-  ["warn", "Re-deriving keep-alive setting from scratch."],
-  ["agent", "Done. ~6 minutes."],
+const TOOLS: Tool[] = [
+  {
+    name: "Claude · Cowork",
+    steps:
+      "In claude.ai, Claude Desktop or Cowork: Customize → Connectors → + → Add custom connector. Name it OpenKT, paste the URL, then Connect. On Team and Enterprise plans an owner adds it first under Organization settings → Connectors.",
+  },
+  {
+    name: "Claude Code",
+    code: {
+      title: "terminal",
+      text: `claude mcp add --transport http openkt ${MCP_URL}`,
+      shell: true,
+    },
+    after: "Then run /mcp, choose openkt and sign in.",
+  },
+  {
+    name: "ChatGPT",
+    steps:
+      "Turn on Developer mode in Settings, then create a connector: name OpenKT, MCP server URL as above, authentication OAuth. Add it to a chat from the tools menu. In a workspace, an admin may need to allow it first.",
+  },
+  {
+    name: "Codex",
+    code: { title: "~/.codex/config.toml", text: `[mcp_servers.openkt]\nurl = "${MCP_URL}"` },
+    after: "Then run codex mcp login openkt.",
+  },
+  {
+    name: "Cursor",
+    code: { title: "~/.cursor/mcp.json · inside mcpServers", text: `"openkt": { "url": "${MCP_URL}" }` },
+    after: "Then enable openkt in Cursor's MCP settings.",
+  },
+  {
+    name: "Any other MCP client",
+    steps:
+      "Browser agents, VS Code, Gemini CLI and the rest: add a remote (Streamable HTTP) server named openkt with the URL above and OAuth. Leave client ID and secret empty.",
+  },
 ];
 
-const OPENKT_LINES: ReadonlyArray<readonly [RunLineKind, string]> = [
-  ["user", "Prepare staging for the new deploy."],
-  ["openkt", "[ injecting  STAGING_FIX_01 · scope: ORG ]"],
-  ["agent", "Applying keep-alive (60s) from prior session."],
-  ["agent", "Validating connection — stable."],
-  ["meta", "↳ tokens consumed: 412"],
-  ["ok", "Pre-briefed. 0 redundant exploration."],
-  ["agent", "Done. ~5 seconds."],
-];
-
-function SampleRun() {
+function Setup({ setupPrompt }: { setupPrompt: string }) {
   return (
-    <section
-      id="sample-run"
-      className="relative border-b border-warm-200 py-20 sm:py-24 bg-warm-900 text-warm-100 overflow-hidden"
-    >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 h-12 bg-gradient-to-b from-transparent via-accent/10 to-transparent terminal-scan"
-      />
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative">
+    <section id="setup" className="border-b border-warm-200 py-20 sm:py-24 bg-warm-100/40">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <Reveal>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-accent font-mono">
-            Sample run · the gift
-          </p>
+          <Kicker>Setup · one URL</Kicker>
         </Reveal>
         <Reveal i={1}>
-          <h2
-            className="mt-2 text-3xl sm:text-4xl tracking-tight text-warm-50 max-w-3xl"
-            style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
-          >
-            One discovery. Free for every agent that follows.
+          <h2 className="mt-2 text-3xl sm:text-4xl tracking-tight text-warm-900 max-w-3xl" style={SERIF}>
+            Add OpenKT to your AI tool.
           </h2>
         </Reveal>
         <Reveal i={2}>
-          <p className="mt-3 text-warm-300 leading-relaxed max-w-2xl">
-            Same prompt, two agents. The naïve one re-explores from zero; the Open KT agent inherits the team&apos;s last session. Watch the cost.
+          <p className="mt-3 text-[15px] text-warm-600 max-w-2xl leading-relaxed">
+            OpenKT is a remote MCP server. Add this URL to your tool, then sign in through your
+            browser. Running your own server? Use its <code className="font-mono text-[13px]">/mcp</code>{" "}
+            URL instead.
           </p>
         </Reveal>
+        <Reveal i={3}>
+          <div className="mt-6 max-w-xl">
+            <p className="mb-2 text-[10px] uppercase tracking-[0.2em] font-mono text-warm-500">
+              MCP server URL
+            </p>
+            <CopyableCommand command={MCP_URL} noPrefix label="Copy MCP URL" />
+          </div>
+        </Reveal>
 
-        <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <Reveal direction="left" i={2}>
-            <Terminal
-              chrome="naive-agent · no Open KT"
-              kicker="Without Open KT"
-              tone="naive"
-              lines={NAIVE_LINES}
-              footer={[
-                ["meta", "↳ session cost: 71,902 tokens · 6m 14s"],
-                ["meta", "↳ outcome: re-discovered yesterday's fix"],
-              ]}
-            />
-          </Reveal>
-          <Reveal direction="right" i={3}>
-            <Terminal
-              chrome="agent · openkt-injected"
-              kicker="With Open KT"
-              tone="openkt"
-              lines={OPENKT_LINES}
-              footer={[
-                ["meta", "↳ session cost: 412 tokens · 5s"],
-                ["meta", "↳ outcome: inherited STAGING_FIX_01 · 99.4% saved"],
-              ]}
-            />
-          </Reveal>
+        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {TOOLS.map((t, i) => (
+            <Reveal key={t.name} i={i % 2}>
+              <div className="relative h-full bg-white p-5 sm:p-6 min-w-0">
+                <BoxCorners />
+                <h3 className="text-base text-warm-900" style={SERIF}>
+                  {t.name}
+                </h3>
+                {t.steps && (
+                  <p className="mt-2 text-[13.5px] text-warm-700 leading-relaxed">{t.steps}</p>
+                )}
+                {t.code && (
+                  <div className="mt-3">
+                    {t.code.shell ? (
+                      <CopyableCommand command={t.code.text} label={`Copy ${t.name} command`} />
+                    ) : (
+                      <CopyBlock title={t.code.title} text={t.code.text} label={`Copy ${t.name} config`} />
+                    )}
+                  </div>
+                )}
+                {t.after && <p className="mt-2 text-[13px] text-warm-600">{t.after}</p>}
+              </div>
+            </Reveal>
+          ))}
         </div>
 
-        <Reveal i={4}>
-          <div className="mt-10 max-w-3xl">
-            <div className="flex flex-wrap items-baseline gap-x-8 gap-y-3 text-warm-200">
-              <div className="flex items-baseline gap-2">
-                <span className="font-mono tabular-nums text-3xl text-warm-50 font-medium">
-                  −99.4%
-                </span>
-                <span className="text-[12px] text-warm-400 font-mono uppercase tracking-[0.18em]">
-                  cost
-                </span>
-              </div>
-              <span className="hidden sm:inline text-warm-700">·</span>
-              <div className="flex items-baseline gap-2">
-                <span className="font-mono tabular-nums text-3xl text-warm-50 font-medium">
-                  6m → 5s
-                </span>
-                <span className="text-[12px] text-warm-400 font-mono uppercase tracking-[0.18em]">
-                  wall clock
-                </span>
-              </div>
-              <span className="hidden sm:inline text-warm-700">·</span>
-              <div className="flex items-baseline gap-2">
-                <span className="font-mono tabular-nums text-3xl text-warm-50 font-medium">
-                  1
-                </span>
-                <span className="text-[12px] text-warm-400 font-mono uppercase tracking-[0.18em]">
-                  receipt on disk
-                </span>
-              </div>
-            </div>
-            <p className="mt-4 text-[13.5px] text-warm-300 leading-relaxed">
-              Same prompt, two agents. The naïve one rebuilds context from scratch. The Open KT one inherits yesterday&apos;s answer and gets to work.
-            </p>
-          </div>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-function Terminal({
-  chrome,
-  kicker,
-  tone,
-  lines,
-  footer,
-}: {
-  chrome: string;
-  kicker: string;
-  tone: "naive" | "openkt";
-  lines: ReadonlyArray<readonly [RunLineKind, string]>;
-  footer: ReadonlyArray<readonly [RunLineKind, string]>;
-}) {
-  const accentTone = tone === "openkt" ? "text-accent" : "text-warm-500";
-  return (
-    <div className="relative bg-warm-800/70 p-0 overflow-hidden h-full flex flex-col">
-      <BoxCorners tone={tone === "openkt" ? "accent" : "dark"} />
-      {/* terminal chrome */}
-      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-warm-700/70 bg-warm-900/55">
-        <span className="inline-block w-2 h-2 rounded-full bg-warm-700" />
-        <span className="inline-block w-2 h-2 rounded-full bg-warm-700" />
-        <span className="inline-block w-2 h-2 rounded-full bg-warm-700" />
-        <span className="ml-3 font-mono text-[10px] tracking-[0.18em] uppercase text-warm-500">
-          {chrome}
-        </span>
-        <span className="flex-1" />
-        <span className={`font-mono text-[10px] tracking-[0.2em] uppercase ${accentTone}`}>
-          {kicker}
-        </span>
-      </div>
-      <div className="px-5 py-5 font-mono text-[12px] leading-relaxed flex-1">
-        {lines.map(([kind, text], i) => (
-          <RunLine key={i} kind={kind} text={text} index={i} />
-        ))}
-      </div>
-      <div className="px-5 py-3 border-t border-warm-700/70 space-y-1">
-        {footer.map(([kind, text], i) => (
-          <RunLine key={`f-${i}`} kind={kind} text={text} index={i + lines.length} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function RunLine({ kind, text, index }: { kind: RunLineKind; text: string; index: number }) {
-  const styles: Record<RunLineKind, { tag: string; tagClass: string; lineClass: string }> = {
-    user:   { tag: "user",  tagClass: "text-warm-500",     lineClass: "text-warm-100" },
-    agent:  { tag: "agent", tagClass: "text-warm-500",     lineClass: "text-warm-200" },
-    openkt: { tag: "opnkt", tagClass: "text-accent/80",    lineClass: "text-accent" },
-    meta:   { tag: "     ", tagClass: "text-warm-600",     lineClass: "text-warm-500" },
-    ok:     { tag: "  ok ", tagClass: "text-emerald-300/80", lineClass: "text-emerald-200/90" },
-    warn:   { tag: " warn", tagClass: "text-amber-300/80", lineClass: "text-amber-200/90" },
-  };
-  const s = styles[kind];
-  return (
-    <div
-      className="term-line flex gap-2.5"
-      style={{ ["--i" as string]: index } as React.CSSProperties}
-    >
-      <span className={`select-none ${s.tagClass}`}>{s.tag}</span>
-      <span className={s.lineClass}>{text}</span>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------
- * Harness strip — JUST the marquee. No grid, no card walls.
- * Lives between the Sample Run and Pricing as a slim trust band.
- * ------------------------------------------------------------------------- */
-
-function HarnessStrip() {
-  const harnesses = [
-    "Claude Code", "Claude Desktop", "Codex", "Cursor", "OpenCode",
-    "Aider", "Hermes", "Auggie", "OpenClaw", "Any MCP",
-  ];
-  return (
-    <section id="harnesses" className="border-b border-warm-200 py-12 sm:py-14">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <Reveal>
-          <p className="text-center text-[11px] uppercase tracking-[0.22em] font-mono text-warm-500">
-            One install · every harness · one shared brain
-          </p>
-        </Reveal>
-        <Reveal i={1}>
-          <div className="mt-5 overflow-hidden border-y border-warm-200 py-3 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
-            <div className="marquee-track flex items-center gap-12 whitespace-nowrap text-[12px] uppercase tracking-[0.22em] font-mono text-warm-600 w-max">
-              {[...harnesses, ...harnesses, ...harnesses].map((h, i) => (
-                <span key={`${h}-${i}`} className="flex items-center gap-2.5">
-                  <span className="inline-block w-1 h-1 rounded-full bg-accent/70" />
-                  {h}
-                </span>
-              ))}
-            </div>
-          </div>
-        </Reveal>
-        <Reveal i={2}>
-          <div id="install" className="mt-12">
-            <div className="mb-6">
-              <Kicker>Install · One shot</Kicker>
-              <h2
-                className="mt-2 text-2xl sm:text-3xl tracking-tight text-warm-900 max-w-2xl"
-                style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
-              >
-                One command. Every harness wired.
-              </h2>
-              <p className="mt-3 text-[14px] text-warm-600 max-w-2xl leading-relaxed">
-                Installs the <code className="text-[13px] bg-warm-100 px-1.5 py-0.5 rounded text-warm-800">kt</code> CLI, registers the MCP server in every harness you have installed (Claude Code, Cursor, Codex, OpenCode), wires the session-start + recall hooks, and patches your shell rc — all in one go. <code className="text-[13px] bg-warm-100 px-1.5 py-0.5 rounded text-warm-800">kt login</code> finishes the auth.
-              </p>
-            </div>
-            <CopyableCommand command="curl -sSL https://openkt.ai/install.sh | bash" />
-            <p className="mt-3 text-[13px] text-warm-600 leading-relaxed">
-              Then: <code className="text-[13px] bg-warm-100 px-1.5 py-0.5 rounded text-warm-800">kt login</code> · binds your project with <code className="text-[13px] bg-warm-100 px-1.5 py-0.5 rounded text-warm-800">kt init</code>.
-              Self-updates via <code className="text-[13px] bg-warm-100 px-1.5 py-0.5 rounded text-warm-800">kt update</code>; binaries sha256-verified.
-            </p>
-
-            <div className="mt-8 rounded-lg border border-warm-200 bg-warm-100/40 p-5 sm:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-6">
-                <div className="max-w-xl">
-                  <p className="text-[11px] uppercase tracking-[0.2em] font-mono text-warm-500">
-                    Don&apos;t want to do it yourself?
-                  </p>
-                  <p className="mt-2 text-[14px] text-warm-700 leading-relaxed">
-                    Hand the setup to your agent. The skill file tells any AI agent — Claude, Cursor, Codex, ChatGPT — exactly how to install and wire OpenKT into your repo. Paste the URL below into your agent and say <span className="italic text-warm-800">&ldquo;follow this skill&rdquo;</span>.
-                  </p>
-                </div>
-                <a
-                  href="https://openkt.ai/skill"
-                  className="inline-flex shrink-0 items-center justify-center gap-2 h-10 px-4 rounded-md border border-warm-300 bg-white text-warm-800 text-sm font-medium hover:border-warm-500 hover:text-warm-900 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                >
-                  Open the skill
-                  <span aria-hidden>→</span>
-                </a>
-              </div>
-              <div className="mt-4">
-                <CopyableCommand command="https://openkt.ai/skill" noPrefix />
-              </div>
-            </div>
-
-            <div className="mt-12 mb-6">
-              <Kicker>Or skip the CLI · MCP over HTTP</Kicker>
-              <h3
-                className="mt-2 text-xl sm:text-2xl tracking-tight text-warm-900 max-w-2xl"
-                style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
-              >
-                Connect a single harness directly.
+          <div id="setup-prompt" className="mt-12 grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-10">
+            <div className="lg:col-span-2">
+              <Kicker tone="accent">Or let your AI do it</Kicker>
+              <h3 className="mt-2 text-2xl tracking-tight text-warm-900" style={SERIF}>
+                Paste this prompt into any AI tool.
               </h3>
-              <p className="mt-2 text-[13px] text-warm-600 max-w-2xl leading-relaxed">
-                Skip the CLI install and just point your harness at OpenKT&apos;s MCP server. You get the same tools (recall, save, search), but you forgo the auto-recall + session-start hooks that <code className="text-[13px] bg-warm-100 px-1 py-0.5 rounded text-warm-800">kt login</code> wires up.
+              <p className="mt-3 text-[14px] text-warm-700 leading-relaxed">
+                It connects OpenKT in the tool you are using, asks before it changes anything, and
+                never needs your password in the chat. It ends with a round trip — save, recall,
+                forget — so you know it works.
               </p>
-            </div>
-            <InstallTabs />
-          </div>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------
- * Pilot — replaces Pricing. Two-column: structured benefits + contact form.
- * ------------------------------------------------------------------------- */
-
-const PILOT_BENEFITS: { n: string; title: string; body: string }[] = [
-  {
-    n: "01",
-    title: "Direct line to the founders",
-    body: "Slack or Telegram, same week onboarding. No support tickets.",
-  },
-  {
-    n: "02",
-    title: "We ship your first skill with you",
-    body: "Pair on a custom skill or workflow that fits your team's stack.",
-  },
-  {
-    n: "03",
-    title: "Your data, your region",
-    body: "Self-hosted, region-pinned, or on our infra — your call.",
-  },
-  {
-    n: "04",
-    title: "Lifetime price-lock",
-    body: "What you sign up for is what you pay. Forever, no seat creep.",
-  },
-];
-
-function Pilot() {
-  return (
-    <section id="pilot" className="border-b border-warm-200 py-20 sm:py-24 bg-warm-100/40">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <Reveal>
-          <Kicker>Pilot · Limited spots</Kicker>
-        </Reveal>
-        <Reveal i={1}>
-          <h2
-            className="mt-2 text-3xl sm:text-4xl tracking-tight text-warm-900 max-w-2xl"
-            style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
-          >
-            Starting private pilots.
-            <br />
-            <span className="text-warm-500">Be one of the first ten.</span>
-          </h2>
-        </Reveal>
-        <Reveal i={2}>
-          <p className="mt-3 text-warm-600 max-w-xl">
-            We&apos;re picking 5–10 design partners — teams who feel the cost of starting from zero and ship fast. Same-week response.
-          </p>
-        </Reveal>
-
-        <div className="mt-12 grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-          <Reveal direction="left" i={3} className="lg:col-span-2">
-            <div className="space-y-1">
-              <div className="mb-6 text-[10px] uppercase tracking-[0.22em] font-mono text-warm-500">
-                What&apos;s included
-              </div>
-              <ul className="space-y-5">
-                {PILOT_BENEFITS.map((b) => (
-                  <li key={b.n} className="flex gap-4">
-                    <span className="font-mono text-[11px] tabular-nums text-warm-400 mt-1 shrink-0">
-                      {b.n}
-                    </span>
-                    <div>
-                      <div className="text-[14.5px] font-medium text-warm-900">{b.title}</div>
-                      <div className="mt-0.5 text-[13px] text-warm-700 leading-relaxed">
-                        {b.body}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </Reveal>
-
-          <Reveal direction="right" i={4} className="lg:col-span-3">
-            <PilotContact />
-          </Reveal>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------
- * FAQ — folds in the old Scope + Governance content as objection handling.
- * Native <details> for progressive disclosure (no JS needed).
- * ------------------------------------------------------------------------- */
-
-const FAQS: { q: string; a: string }[] = [
-  {
-    q: "Where does the data live? Is anything sent to a third party?",
-    a: "Your data lives where you choose — self-hosted, region-pinned, or on our infra. Nothing is sent to a third party unless you wire it. You own the store; we own the pipe.",
-  },
-  {
-    q: "How is this different from putting context in CLAUDE.md / cursor rules?",
-    a: "Static files are write-only. They don't learn from sessions, don't scope to projects, and don't compound across agents. Open KT is a living system — it observes, promotes, and inherits.",
-  },
-  {
-    q: "What if I switch harnesses next quarter?",
-    a: "Your intelligence layer stays. Switch from Claude Code to Codex to Cursor — the memory, skills, and workflows travel with you. The harness changes; the brain doesn't.",
-  },
-  {
-    q: "Who can see what? How does scoping work?",
-    a: "Three scopes: personal, project, org. Memory written in one scope only surfaces in that scope. Promotion across scopes is reviewed, not automatic.",
-  },
-  {
-    q: "Is there an audit trail for what the agent did?",
-    a: "Yes. Every recall and every promotion writes a receipt — which agent, which session, which scope. Replayable, exportable, query-able.",
-  },
-  {
-    q: "What happens to memories that are wrong or outdated?",
-    a: "Memories decay. Low-use patterns fade. Wrong patterns get flagged and retired. The system cleans itself; you don't have to.",
-  },
-];
-
-function FAQ() {
-  return (
-    <section id="faq" className="border-b border-warm-200 py-20 sm:py-24">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
-          <div className="lg:col-span-2">
-            <Reveal>
-              <Kicker>Frequently asked</Kicker>
-            </Reveal>
-            <Reveal i={1}>
-              <h2
-                className="mt-2 text-3xl sm:text-4xl tracking-tight text-warm-900"
-                style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
-              >
-                The objections every CTO has, answered.
-              </h2>
-            </Reveal>
-            <Reveal i={2}>
-              <p className="mt-3 text-warm-600 leading-relaxed">
-                Six things people ask before they install. If something else is on your mind,{" "}
+              <p className="mt-3 text-[13px] text-warm-600">
+                Also at{" "}
                 <a
-                  href="mailto:prathamonchain@gmail.com?subject=Open%20KT%20question"
+                  href={SETUP_PROMPT_PATH}
                   className="text-accent hover:text-accent-light underline underline-offset-2"
                 >
-                  write us
+                  openkt.ai{SETUP_PROMPT_PATH}
                 </a>
                 .
               </p>
-            </Reveal>
+            </div>
+            <div className="lg:col-span-3 min-w-0">
+              <CopyBlock title="setup prompt" text={setupPrompt} label="Copy setup prompt" scroll />
+            </div>
           </div>
-
-          <div className="lg:col-span-3">
-            <ul className="border-t border-warm-200">
-              {FAQS.map((f, i) => (
-                <Reveal key={f.q} i={i} as="li">
-                  <details className="group border-b border-warm-200 py-5">
-                    <summary className="flex items-baseline justify-between cursor-pointer list-none focus-ring">
-                      <span className="flex items-baseline gap-3 pr-4">
-                        <span className="font-mono text-[11px] tabular-nums text-warm-400">
-                          {String(i + 1).padStart(2, "0")}
-                        </span>
-                        <span className="text-[15px] sm:text-base text-warm-900 font-medium">
-                          {f.q}
-                        </span>
-                      </span>
-                      <span
-                        aria-hidden
-                        className="font-mono text-warm-500 group-open:rotate-45 transition-transform duration-300"
-                      >
-                        +
-                      </span>
-                    </summary>
-                    <p className="mt-3 ml-9 text-[13.5px] text-warm-700 leading-relaxed max-w-prose">
-                      {f.a}
-                    </p>
-                  </details>
-                </Reveal>
-              ))}
-            </ul>
-          </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   );
 }
 
 /* -------------------------------------------------------------------------
- * Final CTA
+ * Desktop app for Mac — product.md › Feature set (Capture, Desktop app),
+ * Privacy and trust. Install steps: apps/desktop/INSTALL-UNSIGNED.md.
  * ------------------------------------------------------------------------- */
 
-function FinalCTA() {
+const CAPTURE: [string, string][] = [
+  ["Notes", "Write directly, into any space. A note is a session like any other."],
+  ["Voice", "Hold a key and speak. Transcribed on your Mac; the audio never leaves it."],
+  ["Screenshots", "A hotkey captures what is on screen, described by a local vision model."],
+  ["Who sees what", "Spaces, grants and each tool's default — changeable on any one session."],
+];
+
+function Desktop() {
   return (
-    <section className="border-b border-warm-200 py-20 sm:py-24">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+    <section
+      id="desktop"
+      className="relative border-b border-warm-200 py-20 sm:py-24 bg-warm-900 text-warm-100 overflow-hidden"
+    >
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-start">
+          <div>
+            <Reveal>
+              <Kicker tone="accent">Desktop app for Mac · preview</Kicker>
+            </Reveal>
+            <Reveal i={1}>
+              <h2 className="mt-2 text-3xl sm:text-4xl tracking-tight text-warm-50" style={SERIF}>
+                Capture what never reaches a chat.
+                <br />
+                <span className="text-warm-400">Decide who sees it.</span>
+              </h2>
+            </Reveal>
+            <Reveal i={2}>
+              <ul className="mt-7 space-y-3">
+                {CAPTURE.map(([title, body]) => (
+                  <li key={title} className="flex items-baseline gap-3 text-[14px] leading-relaxed">
+                    <span className="font-mono text-accent shrink-0">▸</span>
+                    <span className="text-warm-200">
+                      <span className="text-warm-50 font-medium">{title}.</span> {body}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+            <Reveal i={3}>
+              <div className="mt-8">
+                <a href={DMG_URL} className={TRY_FOR_MAC_CLASS}>
+                  Download for Mac (Apple silicon)
+                </a>
+                <p className="mt-3 text-[12.5px] text-warm-400 leading-relaxed max-w-md">
+                  Free and open source. Apple silicon, macOS 13.3 or later. On first launch it
+                  downloads its local models (about 3–5 GB). The preview build is unsigned, so macOS
+                  blocks it the first time —{" "}
+                  <a
+                    href={INSTALL_NOTE_URL}
+                    className="text-warm-200 underline underline-offset-2 hover:text-warm-50"
+                  >
+                    how to open it
+                  </a>
+                  .
+                </p>
+              </div>
+            </Reveal>
+          </div>
+
+          <Reveal direction="right" i={2}>
+            <figure>
+              <div className="relative border border-warm-700 bg-white">
+                <BoxCorners tone="accent" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/desktop-session.png"
+                  alt="The OpenKT desktop app showing a meeting session: a summary, the decisions, actions and facts saved from it with who said each, and who can read it."
+                  width={1280}
+                  height={800}
+                  className="block w-full h-auto"
+                  loading="lazy"
+                />
+              </div>
+              <figcaption className="mt-3 text-[11px] font-mono text-warm-500">
+                The Mac app, shown with sample data.
+              </figcaption>
+            </figure>
+          </Reveal>
+        </div>
+
         <Reveal>
-          <div className="relative bg-warm-900 p-10 sm:p-14 text-warm-50 overflow-hidden">
-            <BoxCorners tone="accent" />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 h-12 bg-gradient-to-b from-transparent via-accent/15 to-transparent terminal-scan"
-            />
-            <p className="text-[11px] uppercase tracking-[0.2em] font-mono text-accent">
-              Ready to compound?
-            </p>
-            <h2
-              className="mt-4 text-3xl sm:text-4xl tracking-tight max-w-3xl"
-              style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
-            >
-              Your team already has context.
-              <br />
-              <span className="text-warm-400">Your agents should too.</span>
-            </h2>
-            <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-warm-200">
-              5–10 design partners. Same-week response. Lifetime price-lock.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link
-                href="#pilot"
-                className="inline-flex items-center h-11 px-5 rounded-md bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors shadow-sm focus-ring"
-              >
-                Join the pilot
-              </Link>
-              <a
-                href="mailto:prathamonchain@gmail.com?subject=Open%20KT"
-                className="inline-flex items-center h-11 px-5 rounded-md border border-warm-200/40 text-warm-50 text-sm font-medium hover:bg-warm-800/40 transition-colors focus-ring"
-              >
-                Email us →
-              </a>
+          <div id="install-mac" className="mt-14 grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-10">
+            <div className="lg:col-span-2">
+              <h3 className="text-xl sm:text-2xl tracking-tight text-warm-50" style={SERIF}>
+                Let your AI install it.
+              </h3>
+              <p className="mt-3 text-[14px] text-warm-300 leading-relaxed">
+                Give this to Claude Code, Codex, Cowork or any agent that can run commands on your
+                Mac. It downloads the app, moves it to Applications, clears the quarantine flag on
+                the unsigned build, and opens it.
+              </p>
             </div>
+            <div className="lg:col-span-3 min-w-0 space-y-4">
+              <CopyBlock
+                title="install prompt"
+                text={MAC_INSTALL_PROMPT}
+                label="Copy install prompt"
+                tone="dark"
+              />
+              <div>
+                <p className="mb-2 text-[12.5px] text-warm-300">
+                  If macOS says OpenKT can&apos;t be opened, run this in Terminal:
+                </p>
+                <CopyableCommand command={XATTR_COMMAND} label="Copy xattr command" />
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------
+ * Open source — product.md › Principles, Self-hosting, Privacy and trust
+ * ------------------------------------------------------------------------- */
+
+const OPEN: { title: string; body: string }[] = [
+  {
+    title: "Apache-2.0",
+    body: "Server, Mac app and plugin, under one licence. No hosted-only features.",
+  },
+  {
+    title: "Self-hostable",
+    body: "One server and one Postgres. No graph database, no message broker. Use a hosted instance or run your own.",
+  },
+  {
+    title: "Every model hot-swappable",
+    body: "Any OpenAI-compatible endpoint, including one you run locally. Tool providers are plugins you can replace.",
+  },
+  {
+    title: "Local-first capture",
+    body: "Audio, images and first-pass extraction run on your machine. Only text and what you choose to keep sync to your team's server.",
+  },
+];
+
+function OpenSource() {
+  return (
+    <section id="open-source" className="border-b border-warm-200 py-20 sm:py-24">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <Reveal>
+          <Kicker>Open source</Kicker>
+        </Reveal>
+        <Reveal i={1}>
+          <h2 className="mt-2 text-3xl sm:text-4xl tracking-tight text-warm-900 max-w-3xl" style={SERIF}>
+            Yours to run, read and change.
+          </h2>
+        </Reveal>
+        <Reveal i={2}>
+          <p className="mt-3 text-[15px] text-warm-600 max-w-2xl leading-relaxed">
+            Your team&apos;s context lives on a server your team controls. OpenKT never trains
+            models on it.
+          </p>
+        </Reveal>
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {OPEN.map((o, i) => (
+            <Reveal key={o.title} i={i}>
+              <div className="relative h-full bg-white p-5 hover-lift">
+                <BoxCorners />
+                <h3 className="text-base text-warm-900" style={SERIF}>
+                  {o.title}
+                </h3>
+                <p className="mt-2 text-[13.5px] text-warm-700 leading-relaxed">{o.body}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+        <Reveal>
+          <div className="mt-10 flex flex-wrap gap-3">
+            <a href={GITHUB_URL} className={OUTLINE_CLASS}>
+              View on GitHub <span aria-hidden>→</span>
+            </a>
+            <a href={PRODUCT_DOC_URL} className={OUTLINE_CLASS}>
+              Read the product doc <span aria-hidden>→</span>
+            </a>
           </div>
         </Reveal>
       </div>
@@ -1382,35 +745,29 @@ function Footer() {
   return (
     <footer className="py-12">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-wrap items-center gap-3 justify-between text-xs text-warm-500">
-        <div className="flex items-center gap-2">
-          <span
-            style={{ fontFamily: "'Bitter', Georgia, serif", fontWeight: 500 }}
-            className="text-warm-700"
-          >
-            Open KT
+        <div className="flex flex-wrap items-center gap-2">
+          <span style={SERIF} className="text-warm-700">
+            OpenKT AI
           </span>
           <span>·</span>
-          <span className="font-mono text-warm-500">by openkt</span>
+          <span>open-source shared context for teams</span>
           <span>·</span>
-          <span>the shared intelligence layer</span>
+          <a href={LICENSE_URL} className="font-mono hover:text-warm-800 transition-colors">
+            Apache-2.0
+          </a>
         </div>
-        <div className="flex items-center gap-4">
-          <a
-            href="https://github.com/masti-ai/openkt"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-warm-800 transition-colors"
-          >
+        <div className="flex flex-wrap items-center gap-4">
+          <a href={GITHUB_URL} className="hover:text-warm-800 transition-colors">
             GitHub
           </a>
-          <a href="mailto:prathamonchain@gmail.com" className="hover:text-warm-800 transition-colors">
-            Contact
+          <a href="#setup" className="hover:text-warm-800 transition-colors">
+            Setup
           </a>
-          <a
-            href="https://app.openkt.ai/memories"
-            className="hover:text-warm-800 transition-colors"
-          >
-            Open app
+          <a href={DMG_URL} className="hover:text-warm-800 transition-colors">
+            Mac app
+          </a>
+          <a href="mailto:prathamonchain@gmail.com?subject=OpenKT" className="hover:text-warm-800 transition-colors">
+            Contact
           </a>
         </div>
       </div>
